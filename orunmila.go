@@ -105,8 +105,8 @@ func main() {
 		searchWords(*db, *tagsPtr)
 	} else {
 		fmt.Println("performing an import on the given files:", flag.Args())
-		fmt.Println("arg0:", flag.Arg(0))
 		for i := 0; i < flag.NArg(); i++ {
+			fmt.Println("importing:", flag.Arg(i))
 			importWords(*db, *tagsPtr, flag.Arg(i))
 		}
 	}
