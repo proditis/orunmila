@@ -1,21 +1,27 @@
 package main
 
 import (
+	"bufio"
 	"database/sql"
 	"errors"
 	"flag"
 	"fmt"
-	"log"
 	"os"
+	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
+func check(e error) {
+	if e != nil {
+		log.Fatal(e)
+	}
+}
 func createDB(dbname string) {
 	db, err := sql.Open("sqlite3", dbname)
-	if err != nil {
-		log.Fatal(err)
-	}
+	check(err)
 	defer db.Close()
 
 	sqlStmt := `
@@ -29,75 +35,93 @@ func createDB(dbname string) {
 		return
 	}
 }
-func importTags(db sql.DB, tags string) {
+
+// Convert tags string into tags hash array
+func tagsToArray(tags string) {
 	// explode tags by comma
-	// perform insert of the tags i they dont exist
+	// for each unique item push into a hash array the trimmed value ie tagsArray[tag]
 }
+
+// Import the tags into the database
+func importTags(db sql.DB, tags string) {
+	// ourArray=tagsToarray(tags)
+	// perform insert of the tags if they dont exist and return the ID of that tag into the corresponding hash array
+	// if the tag exists fetch its ID into the corresponding hash array
+	// return the ID's
+}
+
+// Import the words from a given filename into the database
 func importWords(db sql.DB, tags string, filename string) {
 
-	// TODO: Open file
+	file, err := os.Open(filename)
+	if errors.Is(err, os.ErrNotExist) {
+		log.Fatalln(err)
+	}
+	defer file.Close()
+
 	tx, err := db.Begin()
-	if err != nil {
-		log.Fatal(err)
-	}
-	stmt, err := tx.Prepare("insert into words(name) values(?)")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer stmt.Close()
-	for i := 0; i < 100; i++ {
-		_, err = stmt.Exec(fmt.Sprintf("%03d", i))
-		if err != nil {
-			log.Fatal(err)
+	check(err)
+	wordsStmt, err := tx.Prepare("insert or ignore into words(name) values(?)")
+	check(err)
+	defer wordsStmt.Close()
+
+	tagsStmt, err := tx.Prepare("insert into tags(name) values(?)")
+	check(err)
+	defer tagsStmt.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		word := strings.TrimSpace(scanner.Text())
+		if word != "" {
+			fmt.Println("importing word:", word)
+			_, err = wordsStmt.Exec(word)
+			check(err)
+			db.
 		}
 	}
 	err = tx.Commit()
-	if err != nil {
-		log.Fatal(err)
-	}
+	check(err)
 }
 
+//
+// Search for words matching tags
+//
 func searchWords(db sql.DB, tags string) {
-	rows, err := db.Query("select id, name from words")
-	if err != nil {
-		log.Fatal(err)
-	}
+	rows, err := db.Query("select name from words")
+	check(err)
 	defer rows.Close()
 	for rows.Next() {
-		var id int
 		var name string
-		err = rows.Scan(&id, &name)
+		err = rows.Scan(&name)
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println(id, name)
+		fmt.Println(name)
 	}
 	err = rows.Err()
-	if err != nil {
-		log.Fatal(err)
-	}
+	check(err)
 }
 
 func main() {
-	dbPtr := flag.String("db", "foo.db", "the database filename")
+	dbPtr := flag.String("db", "orunmila.db", "the database filename (default: orunmila.db)")
 	tagsPtr := flag.String("tags", "", "a comma separated list of the tags to use")
+	wordsPtr := flag.String("words", "", "a comma separated list of words to look for")
 
 	flag.Parse()
 
 	fmt.Println("using db:", *dbPtr)
 	fmt.Println("using tags:", *tagsPtr)
+	fmt.Println("using tags:", *wordsPtr)
 
-	// FIXME: check for db existence first
+	// check if db file exists
 	file, err := os.Open(*dbPtr)
 	file.Close()
 	if errors.Is(err, os.ErrNotExist) {
-		fmt.Println("database does not exist, creating...")
+		log.Debugln("database does not exist, creating...")
 		createDB(*dbPtr)
 	}
 	db, err := sql.Open("sqlite3", *dbPtr)
-	if err != nil {
-		log.Fatal(err)
-	}
+	check(err)
 	defer db.Close()
 
 	if flag.NArg() == 0 {
@@ -106,7 +130,7 @@ func main() {
 	} else {
 		fmt.Println("performing an import on the given files:", flag.Args())
 		for i := 0; i < flag.NArg(); i++ {
-			fmt.Println("importing:", flag.Arg(i))
+			fmt.Println("importing file:", flag.Arg(i))
 			importWords(*db, *tagsPtr, flag.Arg(i))
 		}
 	}
