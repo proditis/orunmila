@@ -9,7 +9,10 @@ This provides for a way to later request the words from a database based on spec
 NOTE: This is still a really early prototype so not much of a build system into the mix.
 
 ```sh
-go build orunmila
+export CGO_ENABLED=1
+go get github.com/mattn/go-sqlite3
+go get github.com/sirupsen/logrus
+go build orunmila.go
 ```
 
 
