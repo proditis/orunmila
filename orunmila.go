@@ -87,7 +87,7 @@ func main() {
 	fmt.Println("using db:", *dbPtr)
 	fmt.Println("using tags:", *tagsPtr)
 
-	// FIXME: check fo db existence first
+	// FIXME: check for db existence first
 	file, err := os.Open(*dbPtr)
 	file.Close()
 	if errors.Is(err, os.ErrNotExist) {
