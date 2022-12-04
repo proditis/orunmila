@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"flag"
+	"fmt"
 	"os"
 	"strings"
 
@@ -19,6 +20,14 @@ func check(e error) {
 	if e != nil {
 		log.Fatal(e)
 	}
+}
+
+func TagsToString() string {
+	var a []string
+	for _, id := range Tags {
+		a = append(a, fmt.Sprint(id))
+	}
+	return strings.Join(a, ",")
 }
 
 // Gets the ID of a given tag
@@ -79,12 +88,26 @@ func tagsToArray(tags string) map[string]int64 {
 
 // Import the tags into the database
 func importTags(db sql.DB) {
+	tx, err := db.Begin()
+	check(err)
+	tagsStmt, err := tx.Prepare("insert or ignore into tags(name) values(?)")
+	check(err)
+	defer tagsStmt.Close()
+
 	for tag, id := range Tags {
 		if id <= 0 {
 			id = getTagId(db, tag)
 		}
+		if id <= 0 {
+			result, err := tagsStmt.Exec(tag)
+			check(err)
+			id, err = result.LastInsertId()
+		}
+		Tags[tag] = id
 		log.Println("Found tag id:", id)
 	}
+	err = tx.Commit()
+	check(err)
 	// perform insert of the tags if they dont exist and return the ID of that tag into the corresponding hash array
 	// if the tag exists fetch its ID into the corresponding hash array
 	// return the ID's
@@ -93,8 +116,10 @@ func importTags(db sql.DB) {
 // Import the words from a given filename into the database
 func importWords(db sql.DB, tags string, filename string) {
 
-	tagsArr := tagsToArray(tags)
-
+	tagsToArray(tags)
+	importTags(db)
+	log.Println(Tags)
+	log.Printf("%s", TagsToString())
 	file, err := os.Open(filename)
 	if errors.Is(err, os.ErrNotExist) {
 		log.Fatalln(err)
@@ -103,30 +128,42 @@ func importWords(db sql.DB, tags string, filename string) {
 
 	tx, err := db.Begin()
 	check(err)
+
 	wordsStmt, err := tx.Prepare("insert or ignore into words(name) values(?)")
 	check(err)
 	defer wordsStmt.Close()
 
-	tagsStmt, err := tx.Prepare("insert or ignore into tags(name) values(?)")
+	wtStmt, err := tx.Prepare("insert or ignore into wt(word_id,tag_id) values(?,?)")
 	check(err)
-	defer tagsStmt.Close()
+	defer wtStmt.Close()
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		word := strings.TrimSpace(scanner.Text())
+		var word_id int64
 		if word != "" {
-			log.Println("importing word:", word)
-			result, err := wordsStmt.Exec(word)
-			check(err)
-			wordId, err := result.LastInsertId()
-			check(err)
-			if wordId == 0 {
-				log.Printf("word %s already exists, fetching", word)
-				wordId = getWordId(db, word)
-				log.Println("Found word id:", wordId)
+			log.Debugln("importing word:", word)
+			if word_id = getWordId(db, word); word_id <= 0 {
+				result, err := wordsStmt.Exec(word)
+				check(err)
+				word_id, err = result.LastInsertId()
+				check(err)
+				if word_id == 0 {
+					log.Debugf("word %s already exists, fetching", word)
+					word_id = getWordId(db, word)
+					log.Println("Found word id:", word_id)
+				}
 			}
-			log.Printf("word: %s => id: %d\n", word, wordId)
-			log.Println(tagsArr)
+			//
+			log.Printf("word: %s => id: %d\n", word, word_id)
+			for tag, tag_id := range Tags {
+				log.Printf("adding wt(%d,%d) // %s %s", word_id, tag_id, word, tag)
+				_, err = wtStmt.Exec(word_id, tag_id)
+				if err != nil {
+					log.Error(err)
+				}
+			}
+			word_id = 0
 		}
 	}
 	err = tx.Commit()
@@ -137,7 +174,10 @@ func importWords(db sql.DB, tags string, filename string) {
 // Search for words matching tags
 //
 func searchWords(db sql.DB, tags string) {
-	rows, err := db.Query("select name from words")
+	tagsToArray(tags)
+	importTags(db)
+	log.Println(Tags)
+	rows, err := db.Query(fmt.Sprintf("select t1.name from words as t1 left join wt as t2 on t2.word_id=t1.id WHERE t2.tag_id IN (%s)", TagsToString()))
 	check(err)
 	defer rows.Close()
 	for rows.Next() {
@@ -146,7 +186,7 @@ func searchWords(db sql.DB, tags string) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Println(name)
+		fmt.Println(name)
 	}
 	err = rows.Err()
 	check(err)
@@ -161,7 +201,7 @@ func main() {
 
 	log.Println("using db:", *dbPtr)
 	log.Println("using tags:", *tagsPtr)
-	log.Println("using tags:", *wordsPtr)
+	log.Println("using words:", *wordsPtr)
 
 	// check if db file exists
 	file, err := os.Open(*dbPtr)
