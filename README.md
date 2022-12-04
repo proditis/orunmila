@@ -1,5 +1,5 @@
 # Orunmila
-a simple system to refine and produce lists for your bugbounty and pen-test engagements.
+a simple tool to refine and produce lists for your bugbounty and pen-test engagements.
 
 The idea behind it is fairly simple a small sqlite(??) database with each word associated tags. Each word in the dictionary can be associated with multiple tags.
 This provides for a way to later request the words from a database based on specific tags and use the generated wordlist with you normal tools, be it ffuf, dirbuster etc.
@@ -58,7 +58,7 @@ The tool supports using specific database files ie
 orunmila -db programXYZ.db -tags nginx,soap,swift,api,xml
 ```
 
-You can use Orunmila to import wordlists into your database with given set of tags. Existing words will have their tags updated to reflect the new ones
+You can use Orunmila to import wordlists into your database with given set of tags. Existing words will have their tags updated to include old and new ones
 ```
 orunmila -db programXYZ.db -tags raft,directories,manual raft-medium-directories.txt
 ```
