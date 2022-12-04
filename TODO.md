@@ -6,4 +6,4 @@
 * [ ] Make a proper module structure and ensure the dependencies get installed from `go.mod`
 * [ ] Check if we can add loading database to memory to speed things up
 * [ ] Split operations into multiple files to ease development and avoid conflicts in merge
-* [ ] Add workflow to build binary releases
+* [ ] Add Github workflow to build binary releases
