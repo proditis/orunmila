@@ -173,7 +173,7 @@ func importWords(db sql.DB, tags string, filename string) {
 //
 // Search for words matching tags
 //
-func searchWords(db sql.DB, tags string) {
+func searchWordsByTagIds(db sql.DB, tags string) {
 	tagsToArray(tags)
 	importTags(db)
 	log.Println(Tags)
@@ -220,7 +220,7 @@ func main() {
 
 	if flag.NArg() == 0 {
 		log.Println("no filename given, performing a search")
-		searchWords(*db, *tagsPtr)
+		searchWordsByTagIds(*db, *tagsPtr)
 	} else {
 		log.Println("performing an import on the given files:", flag.Args())
 		for i := 0; i < flag.NArg(); i++ {
