@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"flag"
-	"fmt"
 	"os"
 	"strings"
 
@@ -14,11 +13,39 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+var Tags = make(map[string]int64)
+
 func check(e error) {
 	if e != nil {
 		log.Fatal(e)
 	}
 }
+
+// Gets the ID of a given tag
+func getTagId(db sql.DB, tag string) int64 {
+	var id int64
+	stmt, err := db.Prepare("select id from tags where name = ?")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer stmt.Close()
+	stmt.QueryRow(tag).Scan(&id)
+	return id
+}
+
+// Gets the ID of a given word
+func getWordId(db sql.DB, word string) int64 {
+	var id int64
+	stmt, err := db.Prepare("select id from words where name = ?")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer stmt.Close()
+	stmt.QueryRow(word).Scan(&id)
+	return id
+}
+
+// Creates the database schema
 func createDB(dbname string) {
 	db, err := sql.Open("sqlite3", dbname)
 	check(err)
@@ -36,15 +63,28 @@ func createDB(dbname string) {
 	}
 }
 
-// Convert tags string into tags hash array
-func tagsToArray(tags string) {
+// Converts tags string into tags hash array
+func tagsToArray(tags string) map[string]int64 {
 	// explode tags by comma
-	// for each unique item push into a hash array the trimmed value ie tagsArray[tag]
+	var tagsArray = strings.Split(tags, ",")
+
+	// loop through unique items
+	for _, s := range tagsArray {
+		if Tags[s] != -1 {
+			Tags[s] = -1
+		}
+	}
+	return Tags
 }
 
 // Import the tags into the database
-func importTags(db sql.DB, tags string) {
-	// ourArray=tagsToarray(tags)
+func importTags(db sql.DB) {
+	for tag, id := range Tags {
+		if id <= 0 {
+			id = getTagId(db, tag)
+		}
+		log.Println("Found tag id:", id)
+	}
 	// perform insert of the tags if they dont exist and return the ID of that tag into the corresponding hash array
 	// if the tag exists fetch its ID into the corresponding hash array
 	// return the ID's
@@ -52,6 +92,8 @@ func importTags(db sql.DB, tags string) {
 
 // Import the words from a given filename into the database
 func importWords(db sql.DB, tags string, filename string) {
+
+	tagsArr := tagsToArray(tags)
 
 	file, err := os.Open(filename)
 	if errors.Is(err, os.ErrNotExist) {
@@ -65,7 +107,7 @@ func importWords(db sql.DB, tags string, filename string) {
 	check(err)
 	defer wordsStmt.Close()
 
-	tagsStmt, err := tx.Prepare("insert into tags(name) values(?)")
+	tagsStmt, err := tx.Prepare("insert or ignore into tags(name) values(?)")
 	check(err)
 	defer tagsStmt.Close()
 
@@ -73,10 +115,18 @@ func importWords(db sql.DB, tags string, filename string) {
 	for scanner.Scan() {
 		word := strings.TrimSpace(scanner.Text())
 		if word != "" {
-			fmt.Println("importing word:", word)
-			_, err = wordsStmt.Exec(word)
+			log.Println("importing word:", word)
+			result, err := wordsStmt.Exec(word)
 			check(err)
-			db.
+			wordId, err := result.LastInsertId()
+			check(err)
+			if wordId == 0 {
+				log.Printf("word %s already exists, fetching", word)
+				wordId = getWordId(db, word)
+				log.Println("Found word id:", wordId)
+			}
+			log.Printf("word: %s => id: %d\n", word, wordId)
+			log.Println(tagsArr)
 		}
 	}
 	err = tx.Commit()
@@ -96,7 +146,7 @@ func searchWords(db sql.DB, tags string) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println(name)
+		log.Println(name)
 	}
 	err = rows.Err()
 	check(err)
@@ -109,9 +159,9 @@ func main() {
 
 	flag.Parse()
 
-	fmt.Println("using db:", *dbPtr)
-	fmt.Println("using tags:", *tagsPtr)
-	fmt.Println("using tags:", *wordsPtr)
+	log.Println("using db:", *dbPtr)
+	log.Println("using tags:", *tagsPtr)
+	log.Println("using tags:", *wordsPtr)
 
 	// check if db file exists
 	file, err := os.Open(*dbPtr)
@@ -125,12 +175,12 @@ func main() {
 	defer db.Close()
 
 	if flag.NArg() == 0 {
-		fmt.Println("no filename given, performing a search")
+		log.Println("no filename given, performing a search")
 		searchWords(*db, *tagsPtr)
 	} else {
-		fmt.Println("performing an import on the given files:", flag.Args())
+		log.Println("performing an import on the given files:", flag.Args())
 		for i := 0; i < flag.NArg(); i++ {
-			fmt.Println("importing file:", flag.Arg(i))
+			log.Println("importing file:", flag.Arg(i))
 			importWords(*db, *tagsPtr, flag.Arg(i))
 		}
 	}
