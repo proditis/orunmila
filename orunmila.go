@@ -196,13 +196,17 @@ func main() {
 	dbPtr := flag.String("db", "orunmila.db", "the database filename (default: orunmila.db)")
 	tagsPtr := flag.String("tags", "", "a comma separated list of the tags to use")
 	wordsPtr := flag.String("words", "", "a comma separated list of words to look for")
+	debugPtr := flag.Bool("debug", false, "enable debug")
 
 	flag.Parse()
+	if *debugPtr {
+		log.SetLevel(log.DebugLevel)
+	}
 
-	log.Println("using db:", *dbPtr)
-	log.Println("using tags:", *tagsPtr)
-	log.Println("using words:", *wordsPtr)
-
+	log.Debugln("using db:", *dbPtr)
+	log.Debugln("using tags:", *tagsPtr)
+	log.Debugln("using words:", *wordsPtr)
+	log.Debugln("debug:", *debugPtr)
 	// check if db file exists
 	file, err := os.Open(*dbPtr)
 	file.Close()
