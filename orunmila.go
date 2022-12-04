@@ -175,7 +175,6 @@ func importWords(db sql.DB, tags string, filename string) {
 //
 func searchWordsByTagIds(db sql.DB, tags string) {
 	tagsToArray(tags)
-	importTags(db)
 	log.Println(Tags)
 	rows, err := db.Query(fmt.Sprintf("select t1.name from words as t1 left join wt as t2 on t2.word_id=t1.id WHERE t2.tag_id IN (%s) group by t1.id", TagsToString()))
 	check(err)
@@ -214,15 +213,20 @@ func main() {
 		log.Debugln("database does not exist, creating...")
 		createDB(*dbPtr)
 	}
-	db, err := sql.Open("sqlite3", *dbPtr)
-	check(err)
-	defer db.Close()
 
 	if flag.NArg() == 0 {
 		log.Println("no filename given, performing a search")
+		dsn := fmt.Sprintf("file:%s?mode=ro", *dbPtr)
+		db, err := sql.Open("sqlite3", dsn)
+		check(err)
+		defer db.Close()
 		searchWordsByTagIds(*db, *tagsPtr)
 	} else {
 		log.Println("performing an import on the given files:", flag.Args())
+		dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
+		db, err := sql.Open("sqlite3", dsn)
+		check(err)
+		defer db.Close()
 		for i := 0; i < flag.NArg(); i++ {
 			log.Println("importing file:", flag.Arg(i))
 			importWords(*db, *tagsPtr, flag.Arg(i))
