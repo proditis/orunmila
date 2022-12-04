@@ -14,7 +14,9 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var Tags = make(map[string]int64)
+var (
+	Tags = make(map[string]int64)
+)
 
 func check(e error) {
 	if e != nil {
@@ -22,6 +24,7 @@ func check(e error) {
 	}
 }
 
+// Convert tag ids into a comma separated string to be used with our query
 func TagsToString() string {
 	var a []string
 	for _, id := range Tags {
@@ -31,26 +34,23 @@ func TagsToString() string {
 }
 
 // Gets the ID of a given tag
-func getTagId(db sql.DB, tag string) int64 {
+func getTagId(db *sql.DB, tag string) int64 {
 	var id int64
-	stmt, err := db.Prepare("select id from tags where name = ?")
+	err := db.QueryRow("select id from tags where name = ?", tag).Scan(&id)
 	if err != nil {
-		log.Fatal(err)
+		id = -1
 	}
-	defer stmt.Close()
-	stmt.QueryRow(tag).Scan(&id)
 	return id
 }
 
 // Gets the ID of a given word
-func getWordId(db sql.DB, word string) int64 {
+func getWordId(db *sql.DB, word string) int64 {
 	var id int64
-	stmt, err := db.Prepare("select id from words where name = ?")
+
+	err := db.QueryRow("select id from tags where name = ?", word).Scan(&id)
 	if err != nil {
-		log.Fatal(err)
+		id = -1
 	}
-	defer stmt.Close()
-	stmt.QueryRow(word).Scan(&id)
 	return id
 }
 
@@ -72,8 +72,9 @@ func createDB(dbname string) {
 	}
 }
 
-// Converts tags string into tags hash array
-func tagsToArray(tags string) map[string]int64 {
+// Converts tags string into tags hash array of the form
+// Tags[tag_name]=-1
+func tagsToArray(tags string) {
 	// explode tags by comma
 	var tagsArray = strings.Split(tags, ",")
 
@@ -83,11 +84,21 @@ func tagsToArray(tags string) map[string]int64 {
 			Tags[s] = -1
 		}
 	}
-	return Tags
 }
 
-// Import the tags into the database
-func importTags(db sql.DB) {
+// Populate Tags map array with their corresponding id
+// Tags[tag_name]=tag_id
+func populateTagIds(db *sql.DB) {
+	for tag, id := range Tags {
+		if id <= 0 {
+			Tags[tag] = getTagId(db, tag)
+		}
+	}
+
+}
+
+// Import the tags into the database and populate Tags with tag_id
+func importTags(db *sql.DB) {
 	tx, err := db.Begin()
 	check(err)
 	tagsStmt, err := tx.Prepare("insert or ignore into tags(name) values(?)")
@@ -108,15 +119,11 @@ func importTags(db sql.DB) {
 	}
 	err = tx.Commit()
 	check(err)
-	// perform insert of the tags if they dont exist and return the ID of that tag into the corresponding hash array
-	// if the tag exists fetch its ID into the corresponding hash array
-	// return the ID's
 }
 
 // Import the words from a given filename into the database
-func importWords(db sql.DB, tags string, filename string) {
+func importWords(db *sql.DB, tags string, filename string) {
 
-	tagsToArray(tags)
 	importTags(db)
 	log.Println(Tags)
 	log.Printf("%s", TagsToString())
@@ -138,6 +145,7 @@ func importWords(db sql.DB, tags string, filename string) {
 	defer wtStmt.Close()
 
 	scanner := bufio.NewScanner(file)
+	var lines = 0
 	for scanner.Scan() {
 		word := strings.TrimSpace(scanner.Text())
 		var word_id int64
@@ -148,16 +156,16 @@ func importWords(db sql.DB, tags string, filename string) {
 				check(err)
 				word_id, err = result.LastInsertId()
 				check(err)
-				if word_id == 0 {
+				if word_id <= 0 {
 					log.Debugf("word %s already exists, fetching", word)
 					word_id = getWordId(db, word)
 					log.Println("Found word id:", word_id)
 				}
 			}
 			//
-			log.Printf("word: %s => id: %d\n", word, word_id)
+			log.Debugf("word: %s => id: %d\n", word, word_id)
 			for tag, tag_id := range Tags {
-				log.Printf("adding wt(%d,%d) // %s %s", word_id, tag_id, word, tag)
+				log.Debugf("adding wt(%d,%d) // %s %s", word_id, tag_id, word, tag)
 				_, err = wtStmt.Exec(word_id, tag_id)
 				if err != nil {
 					log.Error(err)
@@ -165,6 +173,21 @@ func importWords(db sql.DB, tags string, filename string) {
 			}
 			word_id = 0
 		}
+		if lines%4000 == 0 {
+			log.Info("Lines:", lines)
+			err = tx.Commit()
+			check(err)
+			tx, err = db.Begin()
+			check(err)
+			wordsStmt, err = tx.Prepare("insert or ignore into words(name) values(?)")
+			check(err)
+			defer wordsStmt.Close()
+
+			wtStmt, err = tx.Prepare("insert or ignore into wt(word_id,tag_id) values(?,?)")
+			check(err)
+			defer wtStmt.Close()
+		}
+		lines++
 	}
 	err = tx.Commit()
 	check(err)
@@ -173,9 +196,8 @@ func importWords(db sql.DB, tags string, filename string) {
 //
 // Search for words matching tags
 //
-func searchWordsByTagIds(db sql.DB, tags string) {
-	tagsToArray(tags)
-	importTags(db)
+func searchWordsByTagIds(db *sql.DB, tags string) {
+	populateTagIds(db)
 	log.Println(Tags)
 	rows, err := db.Query(fmt.Sprintf("select t1.name from words as t1 left join wt as t2 on t2.word_id=t1.id WHERE t2.tag_id IN (%s) group by t1.id", TagsToString()))
 	check(err)
@@ -207,7 +229,10 @@ func main() {
 	log.Debugln("using tags:", *tagsPtr)
 	log.Debugln("using words:", *wordsPtr)
 	log.Debugln("debug:", *debugPtr)
+	tagsToArray(*tagsPtr)
+
 	// check if db file exists
+
 	file, err := os.Open(*dbPtr)
 	file.Close()
 	if errors.Is(err, os.ErrNotExist) {
@@ -220,12 +245,12 @@ func main() {
 
 	if flag.NArg() == 0 {
 		log.Println("no filename given, performing a search")
-		searchWordsByTagIds(*db, *tagsPtr)
+		searchWordsByTagIds(db, *tagsPtr)
 	} else {
 		log.Println("performing an import on the given files:", flag.Args())
 		for i := 0; i < flag.NArg(); i++ {
 			log.Println("importing file:", flag.Arg(i))
-			importWords(*db, *tagsPtr, flag.Arg(i))
+			importWords(db, *tagsPtr, flag.Arg(i))
 		}
 	}
 
