@@ -175,7 +175,6 @@ func importWords(db sql.DB, tags string, filename string) {
 //
 func searchWordsByTagIds(db sql.DB, tags string) {
 	tagsToArray(tags)
-	importTags(db)
 	log.Println(Tags)
 	rows, err := db.Query(fmt.Sprintf("select t1.name from words as t1 left join wt as t2 on t2.word_id=t1.id WHERE t2.tag_id IN (%s) group by t1.id", TagsToString()))
 	check(err)
