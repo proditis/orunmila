@@ -6,20 +6,20 @@ This way we can have a huge collection and ask it to give only the given "words"
 
 Some imaginary use cases
 ```sh
-getwords -tags nginx,soap,swift,api,xml >wordlist.txt
+orunmila -tags nginx,soap,swift,api,xml >wordlist.txt
 ```
 
 The tool could optionally support extra word databases ie gathered from specific programs.
 ```
-getwords -db programXYZ.db -tags nginx,soap,swift,api,xml
+orunmila -db programXYZ.db -tags nginx,soap,swift,api,xml
 ```
 
 The is also a need to be able to import and tag lists easy initially.
 ```
-grabwords -db programXYZ.db -tags generic file_to_extract_words
+orunmila -db programXYZ.db -tags generic -i file_to_extract_words
 ```
 
 Continued imports of the same file can be utilized to add tags for the words on our database matching the given file (assuming we have it imported already from the previous run under the `generic` tag)
 ```
-grabwords -db programXYZ.db -tags applicationABC file_to_extract_words
+orunmila -db programXYZ.db -tags applicationABC -i file_to_extract_words
 ```
