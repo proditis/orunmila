@@ -32,7 +32,8 @@ run:
 
 
 clean:
-	go clean
-	rm ${BINARY_NAME}-darwin
-	rm ${BINARY_NAME}-linux
-	rm ${BINARY_NAME}-windows
+	-go clean
+	-rm ${BINARY_NAME}-darwin
+	-rm ${BINARY_NAME}-linux
+	-rm ${BINARY_NAME}-openbsd
+	-rm ${BINARY_NAME}-windows.exe
