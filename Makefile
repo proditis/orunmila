@@ -19,7 +19,7 @@ test_coverage:
 	go test ./... -coverprofile=coverage.out
 
 dep:
-	-@GO111MODULE=on go mod download
+	-@CGO_ENABLED=1 GO111MODULE=on go mod download
 
 vet:
 	go vet
@@ -30,6 +30,9 @@ lint:
 run:
 	./${BINARY_NAME}
 
+
+cleandb:
+	-rm ${BINARY_NAME}.db ${BINARY_NAME}.db-journal
 
 clean:
 	-go clean
