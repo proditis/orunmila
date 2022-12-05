@@ -32,11 +32,12 @@ run:
 
 
 cleandb:
-	-rm ${BINARY_NAME}.db ${BINARY_NAME}.db-journal
+	-@rm ${BINARY_NAME}.db ${BINARY_NAME}.db-journal
 
 clean:
 	-go clean
-	-rm ${BINARY_NAME}-darwin
-	-rm ${BINARY_NAME}-linux
-	-rm ${BINARY_NAME}-openbsd
-	-rm ${BINARY_NAME}-windows.exe
+	-@rm coverage.out
+	-@rm ${BINARY_NAME}-darwin
+	-@rm ${BINARY_NAME}-linux
+	-@rm ${BINARY_NAME}-openbsd
+	-@rm ${BINARY_NAME}-windows.exe
