@@ -90,10 +90,22 @@ func tagsToArray(tags string) {
 func populateTagIds(db *sql.DB) {
 	for tag, id := range Tags {
 		if id <= 0 {
+			// fetch tag id from database if exists and assign it
 			Tags[tag] = getTagId(db, tag)
 		}
 	}
 
+}
+
+// Removes tags that have not been assigned an ID
+// Tags[tag_name]=tag_id
+func removeEmptyTags() {
+	for tag, id := range Tags {
+		if id <= 0 {
+			log.Debugln("Removing not found tag:", tag)
+			delete(Tags, tag)
+		}
+	}
 }
 
 // Import the tags into the database and populate Tags with tag_id
@@ -195,7 +207,8 @@ func importWords(db *sql.DB, tags string, filename string) {
 //
 func searchWordsByTagIds(db *sql.DB, tags string) {
 	populateTagIds(db)
-	log.Println(Tags)
+	removeEmptyTags()
+	log.Println("Using tags:", Tags)
 	rows, err := db.Query(fmt.Sprintf("select t1.name from words as t1 left join wt as t2 on t2.word_id=t1.id WHERE t2.tag_id IN (%s) group by t1.id", TagsToString()))
 	check(err)
 	defer rows.Close()
@@ -231,17 +244,13 @@ func main() {
 	// check if db file exists
 
 	info, err := os.Stat(*dbPtr)
-	if info != nil {
-		if info.IsDir() {
-			log.Fatalf("%s is a directory", *dbPtr)
-		}
-	}
-	
-	if os.IsNotExist(err) {
+	if err == nil && !info.Mode().IsRegular() {
+		log.Fatalf("%s is not a regular file", *dbPtr)
+	} else if os.IsNotExist(err) {
 		log.Debugln("database does not exist, creating...")
 		createDB(*dbPtr)
-	} else {
-		log.Fatalln(err)
+	} else if err != nil {
+		log.Fatal(err)
 	}
 
 	if flag.NArg() == 0 {
