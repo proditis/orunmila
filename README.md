@@ -5,6 +5,12 @@ The idea behind it is fairly simple a small sqlite(??) database with each word a
 This provides for a way to later request the words from a database based on specific tags and use the generated wordlist with you normal tools, be it ffuf, dirbuster etc.
 
 
+## Instalation
+
+```sh
+GO111MODULE=on go install github.com/proditis/orunmila@latest
+```
+
 ## Building
 NOTE: This is still a really early prototype so not much of a build system into the mix.
 
