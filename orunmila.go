@@ -128,9 +128,7 @@ func importWords(db *sql.DB, tags string, filename string) {
 	log.Println(Tags)
 	log.Printf("%s", TagsToString())
 	file, err := os.Open(filename)
-	if errors.Is(err, os.ErrNotExist) {
-		log.Fatalln(err)
-	}
+	check(err)
 	defer file.Close()
 
 	tx, err := db.Begin()
@@ -233,11 +231,14 @@ func main() {
 
 	// check if db file exists
 
-	file, err := os.Open(*dbPtr)
-	file.Close()
-	if errors.Is(err, os.ErrNotExist) {
-		log.Debugln("database does not exist, creating...")
-		createDB(*dbPtr)
+	_, err := os.Stat(*dbPtr)
+	if err != nil {
+		if os.IsNotExist(err) {
+			log.Debugln("database does not exist, creating...")
+			createDB(*dbPtr)
+		} else {
+			log.Fatalln(err)
+		}
 	}
 
 	if flag.NArg() == 0 {
