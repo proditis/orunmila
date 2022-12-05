@@ -3,7 +3,7 @@ SOURCE=orunmila.go
 
 .PHONY: all
 
-all: dep test test_coverage vet lint build
+all: dep test test_coverage vet build
 
 
 build:
@@ -24,8 +24,8 @@ dep:
 vet:
 	go vet
 
-lint:
-	golangci-lint run --enable-all
+#lint:
+#	golangci-lint run --enable-all
 
 run:
 	./${BINARY_NAME}
