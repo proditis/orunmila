@@ -7,3 +7,5 @@
 * [ ] Check if we can add loading database to memory to speed things up
 * [ ] Split operations into multiple files to ease development and avoid conflicts in merge
 * [ ] Add Github workflow to build binary releases
+* [ ] Add support for case sensitive words if needed (this involves using `collate nocase` on the schema and our search)
+* [ ] Add support to search for `-words` as well as `-tags`
