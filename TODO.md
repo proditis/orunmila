@@ -9,4 +9,4 @@
 * [ ] Add Github workflow to build binary releases
 * [ ] Add support for case sensitive words if needed (this involves using `collate nocase` on the schema and our search)
 * [ ] Add support to search for `-words` as well as `-tags`
-* [ ] Make sure the database files are created into the current working directory and not wherever the binary is installed
+* [x] Make sure the database files are created into the current working directory and not wherever the binary is installed
