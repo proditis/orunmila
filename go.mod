@@ -1,4 +1,4 @@
-module proditis/orunmila
+module github.com/proditis/orunmila
 
 go 1.18
 
