@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -225,12 +226,16 @@ func searchWordsByTagIds(db *sql.DB, tags string) {
 }
 
 func main() {
-	dbPtr := flag.String("db", "orunmila.db", "the database filename (default: orunmila.db)")
+	path, err := os.Getwd()
+	check(err)
+
+	dbPtr := flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
 	tagsPtr := flag.String("tags", "", "a comma separated list of the tags to use")
 	wordsPtr := flag.String("words", "", "a comma separated list of words to look for")
 	debugPtr := flag.Bool("debug", false, "enable debug")
 
 	flag.Parse()
+
 	if *debugPtr {
 		log.SetLevel(log.DebugLevel)
 	}
