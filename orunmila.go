@@ -231,17 +231,17 @@ func main() {
 	// check if db file exists
 
 	info, err := os.Stat(*dbPtr)
-	if info.Mode().IsRegular() {
-		if err != nil {
-			if os.IsNotExist(err) {
-				log.Debugln("database does not exist, creating...")
-				createDB(*dbPtr)
-			} else {
-				log.Fatalln(err)
-			}
-		}	
+	if info != nil {
+		if info.IsDir() {
+			log.Fatalf("%s is a directory", *dbPtr)
+		}
+	}
+	
+	if os.IsNotExist(err) {
+		log.Debugln("database does not exist, creating...")
+		createDB(*dbPtr)
 	} else {
-		log.Fatalf("%s is a directory", *dbPtr)
+		log.Fatalln(err)
 	}
 
 	if flag.NArg() == 0 {
