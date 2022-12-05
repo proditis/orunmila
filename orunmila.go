@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"database/sql"
-	"errors"
 	"flag"
 	"fmt"
 	"os"
