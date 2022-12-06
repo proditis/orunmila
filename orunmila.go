@@ -72,6 +72,23 @@ func createDB(dbname string) {
 	}
 }
 
+// Split a string into map
+func stringToArray(inString string) map[string]int64 {
+	// explode tags by comma
+	var wordsArray = strings.Split(inString, ",")
+	var _tMap = make(map[string]int64)
+
+	// loop through unique items
+	for _, s := range wordsArray {
+		s = strings.TrimSpace(s)
+		if s != "" && _tMap[s] != -1 {
+			_tMap[s] = -1
+		}
+	}
+
+	return _tMap
+}
+
 // Converts tags string into tags hash array of the form
 // Tags[tag_name]=-1
 func tagsToArray(tags string) {
@@ -125,7 +142,7 @@ func importTags(db *sql.DB) {
 		if id <= 0 {
 			result, err := tagsStmt.Exec(tag)
 			check(err)
-			id, err = result.LastInsertId()
+			id, _ = result.LastInsertId()
 		}
 		Tags[tag] = id
 		log.Println("Found tag id:", id)
@@ -135,7 +152,7 @@ func importTags(db *sql.DB) {
 }
 
 // Import the words from a given filename into the database
-func importWords(db *sql.DB, tags string, filename string) {
+func importFileWords(db *sql.DB, tags string, filename string) {
 
 	importTags(db)
 	log.Println(Tags)
@@ -274,7 +291,7 @@ func main() {
 		defer db.Close()
 		for i := 0; i < flag.NArg(); i++ {
 			log.Println("importing file:", flag.Arg(i))
-			importWords(db, *tagsPtr, flag.Arg(i))
+			importFileWords(db, *tagsPtr, flag.Arg(i))
 		}
 	}
 
