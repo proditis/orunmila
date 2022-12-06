@@ -80,7 +80,8 @@ func tagsToArray(tags string) {
 
 	// loop through unique items
 	for _, s := range tagsArray {
-		if Tags[s] != -1 {
+		s = strings.TrimSpace(s)
+		if s != "" && Tags[s] != -1 {
 			Tags[s] = -1
 		}
 	}
