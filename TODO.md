@@ -10,3 +10,5 @@
 * [ ] Add support for case sensitive words if needed (this involves using `collate nocase` on the schema and our search)
 * [ ] Add support to search for `-words` as well as `-tags`
 * [x] Make sure the database files are created into the current working directory and not wherever the binary is installed
+* [] Add a help menu
+* [] Complete subcommands implementation

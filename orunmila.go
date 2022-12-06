@@ -229,57 +229,126 @@ func searchWordsByTagIds(db *sql.DB, tags string) {
 	check(err)
 }
 
+// check if file exists
+func is_file_exists(filename string) bool {
+	info, err := os.Stat(filename)
+	if err == nil && !info.Mode().IsRegular() {
+		log.Fatalf("%q is not a regular file", filename)
+	} else if os.IsNotExist(err) {
+		return false
+	} else if err != nil {
+		log.Fatal(err)
+	}
+	return true
+}
+
+// parse args of the import subcommand and exec it
+func import_subcmd(args []string) {
+	path, err := os.Getwd()
+	check(err)
+
+	flag := flag.NewFlagSet("import", flag.ExitOnError) 
+	var (
+		dbPtr = flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
+		tagsPtr = flag.String("tags", "", "a comma separated list of the tags to use")
+	)
+
+	flag.Parse(args)
+	flag.Args()
+
+	log.Println("performing an import on the given files:", flag.Args())
+
+	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
+	db, err := sql.Open("sqlite3", dsn)
+	check(err)
+	defer db.Close()
+
+	Tags = stringToArray(*tagsPtr)
+
+	for i := 0; i < flag.NArg(); i++ {
+		log.Println("importing file:", flag.Arg(i))
+		if is_file_exists(flag.Arg(i)) {
+			importFileWords(db, *tagsPtr, flag.Arg(i))
+		} else {
+			log.Warnf("%q does not exists.", flag.Arg(i))
+		}
+	}
+}
+
+// parse args of the import subcommand and exec it
+func search_subcmd(args []string) {
+	path, err := os.Getwd()
+	check(err)
+
+	flag := flag.NewFlagSet("search", flag.ExitOnError) 
+	var (
+		dbPtr = flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
+		tagsPtr = flag.String("tags", "", "a comma separated list of the tags to use")
+	)
+
+	flag.Parse(args)
+	flag.Args()
+
+	log.Debugln("using db:", *dbPtr)
+	log.Debugln("using tags:", *tagsPtr)
+	log.Println("no filename given, performing a search")
+
+	Tags = stringToArray(*tagsPtr)
+	dsn := fmt.Sprintf("file:%s?mode=ro", *dbPtr)
+	db, err := sql.Open("sqlite3", dsn)
+	check(err)
+	defer db.Close()
+	searchWordsByTagIds(db, *tagsPtr)
+}
+
 func main() {
 	path, err := os.Getwd()
 	check(err)
 
 	dbPtr := flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
-	tagsPtr := flag.String("tags", "", "a comma separated list of the tags to use")
-	wordsPtr := flag.String("words", "", "a comma separated list of words to add or search")
+	// poor guy, for now
+	// wordsPtr := flag.String("words", "", "a comma separated list of words to add or search")
 	debugPtr := flag.Bool("debug", false, "enable debug")
 
 	flag.Parse()
+
+	args := flag.Args()
+	if len(args) == 0 {
+		log.Fatal("No subcommand has been specified")
+		// TODO print help menu
+	}
+
+	subcommand, args := args[0], args[1:]
+
+	if len(args) == 0 {
+		log.Fatalf("No arguments have been specified to the subcommand %q", subcommand)
+		// TODO print help menu corresponding to the subcommand
+	}
 
 	if *debugPtr {
 		log.SetLevel(log.DebugLevel)
 	}
 
-	log.Debugln("using db:", *dbPtr)
-	log.Debugln("using tags:", *tagsPtr)
-	log.Debugln("using words:", *wordsPtr)
+	// poor guy, for now
+	//log.Debugln("using words:", *wordsPtr)
 	log.Debugln("debug:", *debugPtr)
 
-	Tags = stringToArray(*tagsPtr)
-	Words = stringToArray(*wordsPtr)
-
-	// check if db file exists
-	info, err := os.Stat(*dbPtr)
-	if err == nil && !info.Mode().IsRegular() {
-		log.Fatalf("%s is not a regular file", *dbPtr)
-	} else if os.IsNotExist(err) {
+	if !is_file_exists(*dbPtr) {
 		log.Debugln("database does not exist, creating...")
 		createDB(*dbPtr)
-	} else if err != nil {
-		log.Fatal(err)
 	}
 
-	if flag.NArg() == 0 {
-		log.Println("no filename given, performing a search")
-		dsn := fmt.Sprintf("file:%s?mode=ro", *dbPtr)
-		db, err := sql.Open("sqlite3", dsn)
-		check(err)
-		defer db.Close()
-		searchWordsByTagIds(db, *tagsPtr)
-	} else {
-		log.Println("performing an import on the given files:", flag.Args())
-		dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
-		db, err := sql.Open("sqlite3", dsn)
-		check(err)
-		defer db.Close()
-		for i := 0; i < flag.NArg(); i++ {
-			log.Println("importing file:", flag.Arg(i))
-			importFileWords(db, *tagsPtr, flag.Arg(i))
-		}
+	// poor guy, for now
+	// Words = stringToArray(*wordsPtr)
+
+	switch subcommand {
+		case "import":
+			import_subcmd(args)
+		case "search":
+			search_subcmd(args)
+		default:
+			log.Fatalf("Unrecognized subcommand: %q", subcommand)
+			// TODO print help menu
 	}
 
 	os.Exit(0)
