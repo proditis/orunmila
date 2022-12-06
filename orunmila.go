@@ -254,7 +254,6 @@ func import_subcmd(args []string) {
 	)
 
 	flag.Parse(args)
-	flag.Args()
 
 	log.Println("performing an import on the given files:", flag.Args())
 
@@ -287,7 +286,6 @@ func search_subcmd(args []string) {
 	)
 
 	flag.Parse(args)
-	flag.Args()
 
 	log.Debugln("using db:", *dbPtr)
 	log.Debugln("using tags:", *tagsPtr)
