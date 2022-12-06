@@ -15,7 +15,8 @@ import (
 )
 
 var (
-	Tags = make(map[string]int64)
+	Tags  = make(map[string]int64)
+	Words = make(map[string]int64)
 )
 
 func check(e error) {
@@ -72,7 +73,7 @@ func createDB(dbname string) {
 	}
 }
 
-// Split a string into map
+// Split a string into a HASH map of the form Array[word]=-1
 func stringToArray(inString string) map[string]int64 {
 	// explode tags by comma
 	var wordsArray = strings.Split(inString, ",")
@@ -87,21 +88,6 @@ func stringToArray(inString string) map[string]int64 {
 	}
 
 	return _tMap
-}
-
-// Converts tags string into tags hash array of the form
-// Tags[tag_name]=-1
-func tagsToArray(tags string) {
-	// explode tags by comma
-	var tagsArray = strings.Split(tags, ",")
-
-	// loop through unique items
-	for _, s := range tagsArray {
-		s = strings.TrimSpace(s)
-		if s != "" && Tags[s] != -1 {
-			Tags[s] = -1
-		}
-	}
 }
 
 // Populate Tags map array with their corresponding id
@@ -249,7 +235,7 @@ func main() {
 
 	dbPtr := flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
 	tagsPtr := flag.String("tags", "", "a comma separated list of the tags to use")
-	wordsPtr := flag.String("words", "", "a comma separated list of words to look for")
+	wordsPtr := flag.String("words", "", "a comma separated list of words to add or search")
 	debugPtr := flag.Bool("debug", false, "enable debug")
 
 	flag.Parse()
@@ -262,10 +248,11 @@ func main() {
 	log.Debugln("using tags:", *tagsPtr)
 	log.Debugln("using words:", *wordsPtr)
 	log.Debugln("debug:", *debugPtr)
-	tagsToArray(*tagsPtr)
+
+	Tags = stringToArray(*tagsPtr)
+	Words = stringToArray(*wordsPtr)
 
 	// check if db file exists
-
 	info, err := os.Stat(*dbPtr)
 	if err == nil && !info.Mode().IsRegular() {
 		log.Fatalf("%s is not a regular file", *dbPtr)
