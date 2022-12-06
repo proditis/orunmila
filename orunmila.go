@@ -247,9 +247,9 @@ func importSubcmd(args []string) {
 	path, err := os.Getwd()
 	check(err)
 
-	flag := flag.NewFlagSet("import", flag.ExitOnError) 
+	flag := flag.NewFlagSet("import", flag.ExitOnError)
 	var (
-		dbPtr = flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
+		dbPtr   = flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
 		tagsPtr = flag.String("tags", "", "a comma separated list of the tags to use")
 	)
 
@@ -279,9 +279,9 @@ func searchSubcmd(args []string) {
 	path, err := os.Getwd()
 	check(err)
 
-	flag := flag.NewFlagSet("search", flag.ExitOnError) 
+	flag := flag.NewFlagSet("search", flag.ExitOnError)
 	var (
-		dbPtr = flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
+		dbPtr   = flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
 		tagsPtr = flag.String("tags", "", "a comma separated list of the tags to use")
 	)
 
@@ -310,6 +310,10 @@ func main() {
 
 	flag.Parse()
 
+	if *debugPtr {
+		log.SetLevel(log.DebugLevel)
+	}
+
 	args := flag.Args()
 	if len(args) == 0 {
 		log.Fatal("No subcommand has been specified")
@@ -321,10 +325,6 @@ func main() {
 	if len(args) == 0 {
 		log.Fatalf("No arguments have been specified to the subcommand %q", subcommand)
 		// TODO print help menu corresponding to the subcommand
-	}
-
-	if *debugPtr {
-		log.SetLevel(log.DebugLevel)
 	}
 
 	// poor guy, for now
@@ -340,13 +340,13 @@ func main() {
 	// Words = stringToArray(*wordsPtr)
 
 	switch subcommand {
-		case "import":
-			importSubcmd(args)
-		case "search":
-			searchSubcmd(args)
-		default:
-			log.Fatalf("Unrecognized subcommand: %q", subcommand)
-			// TODO print help menu
+	case "import":
+		importSubcmd(args)
+	case "search":
+		searchSubcmd(args)
+	default:
+		log.Fatalf("Unrecognized subcommand: %q", subcommand)
+		// TODO print help menu
 	}
 
 	os.Exit(0)
