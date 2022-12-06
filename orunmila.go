@@ -230,7 +230,7 @@ func searchWordsByTagIds(db *sql.DB, tags string) {
 }
 
 // check if file exists
-func is_file_exists(filename string) bool {
+func isFileExists(filename string) bool {
 	info, err := os.Stat(filename)
 	if err == nil && !info.Mode().IsRegular() {
 		log.Fatalf("%q is not a regular file", filename)
@@ -243,7 +243,7 @@ func is_file_exists(filename string) bool {
 }
 
 // parse args of the import subcommand and exec it
-func import_subcmd(args []string) {
+func importSubcmd(args []string) {
 	path, err := os.Getwd()
 	check(err)
 
@@ -266,7 +266,7 @@ func import_subcmd(args []string) {
 
 	for i := 0; i < flag.NArg(); i++ {
 		log.Println("importing file:", flag.Arg(i))
-		if is_file_exists(flag.Arg(i)) {
+		if isFileExists(flag.Arg(i)) {
 			importFileWords(db, *tagsPtr, flag.Arg(i))
 		} else {
 			log.Warnf("%q does not exists.", flag.Arg(i))
@@ -275,7 +275,7 @@ func import_subcmd(args []string) {
 }
 
 // parse args of the import subcommand and exec it
-func search_subcmd(args []string) {
+func searchSubcmd(args []string) {
 	path, err := os.Getwd()
 	check(err)
 
@@ -331,7 +331,7 @@ func main() {
 	//log.Debugln("using words:", *wordsPtr)
 	log.Debugln("debug:", *debugPtr)
 
-	if !is_file_exists(*dbPtr) {
+	if !isFileExists(*dbPtr) {
 		log.Debugln("database does not exist, creating...")
 		createDB(*dbPtr)
 	}
@@ -341,9 +341,9 @@ func main() {
 
 	switch subcommand {
 		case "import":
-			import_subcmd(args)
+			importSubcmd(args)
 		case "search":
-			search_subcmd(args)
+			searchSubcmd(args)
 		default:
 			log.Fatalf("Unrecognized subcommand: %q", subcommand)
 			// TODO print help menu
