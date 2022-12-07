@@ -356,11 +356,12 @@ func addSubcmd(args []string) {
 	flag.Parse(args)
 
 	if len(args) == 0 {
-		log.Fatalf("you need to provide words to be added")
-		// TODO print help menu corresponding to the subcommand
+		log.Error("you need to provide words to be added")
+		flag.Usage()
+		os.Exit(1)
 	}
 
-	log.Infoln("Importing the given words:", flag.Args())
+	log.Infoln("Adding the given words:", flag.Args())
 
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
 	db, err := sql.Open("sqlite3", dsn)
@@ -420,12 +421,26 @@ func importSubcmd(args []string) {
 	check(err)
 
 	flag := flag.NewFlagSet("import", flag.ExitOnError)
+
+	flag.Usage = func() {
+		fmt.Fprint(flag.Output(), "Import a word file into the database with optional tags\n\n")
+		fmt.Fprintf(flag.Output(), "Usage of orunmila import:\n")
+		flag.PrintDefaults()
+		fmt.Fprintln(flag.Output(), "  filename\n\tthe filename to read the words from")
+	}
+
 	var (
 		dbPtr   = flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
 		tagsPtr = flag.String("tags", "", "a comma separated list of the tags to use")
 	)
 
 	flag.Parse(args)
+
+	if len(args) == 0 {
+		log.Error("you need to provide at least a filename")
+		flag.Usage()
+		os.Exit(1)
+	}
 
 	log.Println("performing an import on the given files:", flag.Args())
 
@@ -475,6 +490,19 @@ func main() {
 	path, err := os.Getwd()
 	check(err)
 
+	flag.Usage = func() {
+		fmt.Fprint(flag.CommandLine.Output(), "~~~~~ orunmila word list manager ~~~~~\n\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "Usage of orunmila:\n")
+		flag.PrintDefaults()
+		fmt.Fprintln(flag.CommandLine.Output(), "\nSubcommands")
+		fmt.Fprintln(flag.CommandLine.Output(), "  add      Add words into the database with optional tags")
+		fmt.Fprintln(flag.CommandLine.Output(), "  search   Searches the database for given words")
+		fmt.Fprintln(flag.CommandLine.Output(), "  import   Import a wordlist file into the database")
+		fmt.Fprintln(flag.CommandLine.Output(), "  info     Display database system configuration information")
+		fmt.Fprintln(flag.CommandLine.Output(), "  describe Set the database description")
+		fmt.Fprintln(flag.CommandLine.Output(), "  vacuum   Rebuild the database file, repacking it into a minimal amount of disk space")
+	}
+
 	dbPtr := flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
 	debugPtr := flag.Bool("debug", false, "enable debug")
 
@@ -486,7 +514,9 @@ func main() {
 
 	args := flag.Args()
 	if len(args) == 0 {
-		log.Fatal("No subcommand has been specified")
+		log.Error("No subcommand has been specified")
+		flag.Usage()
+		os.Exit(1)
 		// TODO print help menu
 	}
 
