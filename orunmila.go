@@ -149,7 +149,7 @@ func importTags(db *sql.DB) {
 }
 
 // Import the words from a given filename into the database
-func importFileWords(db *sql.DB, tags string, filename string) {
+func importFileWords(db *sql.DB, filename string) {
 
 	importTags(db)
 	log.Println(Tags)
@@ -469,7 +469,7 @@ func importSubcmd(args []string) {
 	for i := 0; i < importCmd.NArg(); i++ {
 		log.Println("[importSubcmd] importing file:", importCmd.Arg(i))
 		if isFileExists(importCmd.Arg(i)) {
-			importFileWords(db, *tagsPtr, importCmd.Arg(i))
+			importFileWords(db, importCmd.Arg(i))
 		} else {
 			log.Warnf("[importSubcmd] %q does not exists.", importCmd.Arg(i))
 		}
