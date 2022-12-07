@@ -28,8 +28,6 @@ func getDefaultDBPath() string {
 	return filepath.Join(path, "orunmila.db")
 }
 
-var defaultDBPath = getDefaultDBPath()
-
 func check(e error) {
 	if e != nil {
 		log.Fatal(e)
@@ -266,9 +264,6 @@ func isFileExists(filename string) bool {
 func createDbFileifNotExists(dbPtr string) {
 	if !isFileExists(dbPtr) {
 		log.Debugln("database does not exist, creating...")
-		if dbPtr != defaultDBPath {
-			defaultDBPath = dbPtr
-		}
 		createDB(dbPtr)
 	}
 }
@@ -338,10 +333,6 @@ func describeSubcmd(args []string) {
 
 func infoSubcmd(args []string) {
 	flag := flag.NewFlagSet("info", flag.ContinueOnError)
-
-	var (
-		dbPtr = flag.String("db", defaultDBPath, "the database filename (default: orunmila.db")
-	)
 
 	flag.Parse(args)
 
@@ -531,7 +522,7 @@ func main() {
 		fmt.Fprintln(flag.CommandLine.Output(), "  vacuum   Rebuild the database file, repacking it into a minimal amount of disk space")
 	}
 
-	dbPtr = flag.String("db", defaultDBPath, "the database filename (default: orunmila.db")
+	dbPtr = flag.String("db", getDefaultDBPath(), "the database filename (default: orunmila.db")
 	debugPtr = flag.Bool("debug", false, "enable debug")
 
 	flag.Parse()
