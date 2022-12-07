@@ -324,9 +324,8 @@ func describeSubcmd(args []string) {
 
 	desc := strings.TrimSpace(strings.Join(flag.Args(), " "))
 	_, err = descStmt.Exec("description", desc)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	check(err)
+
 	err = tx.Commit()
 	check(err)
 }
