@@ -296,6 +296,8 @@ func vacuumSubcmd(args []string) {
 	defer db.Close()
 	_, err = db.Query("VACUUM")
 	check(err)
+
+	log.Println("database rebuilt successfully")
 }
 
 func describeSubcmd(args []string) {
