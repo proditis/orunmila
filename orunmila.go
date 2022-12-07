@@ -243,6 +243,26 @@ func isFileExists(filename string) bool {
 }
 
 // parse args of the import subcommand and exec it
+func vacuumSubcmd(args []string) {
+	path, err := os.Getwd()
+	check(err)
+
+	flag := flag.NewFlagSet("vacuum", flag.ContinueOnError)
+	var (
+		dbPtr = flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
+	)
+	flag.Parse(args)
+
+	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
+	db, err := sql.Open("sqlite3", dsn)
+	check(err)
+	defer db.Close()
+	_, err = db.Query("VACUUM")
+	check(err)
+
+}
+
+// parse args of the import subcommand and exec it
 func addSubcmd(args []string) {
 	path, err := os.Getwd()
 	check(err)
@@ -371,8 +391,6 @@ func main() {
 	check(err)
 
 	dbPtr := flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
-	// poor guy, for now
-	// wordsPtr := flag.String("words", "", "a comma separated list of words to add or search")
 	debugPtr := flag.Bool("debug", false, "enable debug")
 
 	flag.Parse()
@@ -413,6 +431,8 @@ func main() {
 		importSubcmd(args)
 	case "search":
 		searchSubcmd(args)
+	case "vacuum":
+		vacuumSubcmd(args)
 	default:
 		log.Fatalf("Unrecognized subcommand: %q", subcommand)
 		// TODO print help menu
