@@ -23,27 +23,38 @@ go build orunmila.go
 
 
 ## Subcommands
-* add words from the cli
+* **`add`** words from the cli
   ```sh
   orunmila add -tags a,b,c word1 word2 word3
   ```
-* import words from a file
+* **`import`** words from a file
   ```sh
   orunmila import -tags a,b,c filename
   ```
-* search words
-```
-  orunmila search -tags a,b,c filename
-```
-* vacuum database and apply any schema updates
+* **`search`** words
+  ```
+    orunmila search -tags a,b,c filename
+  ```
+* **`vacuum`** database and apply any schema updates
   ```sh
   orunmila vacuum a
+  ```
+* **`describe`** a database
+  ```sh
+  orunmila describe My Description for this database
+  ```
+* **`info`** return information about a database
+  ```sh
+  $ orunmila info all
+  [version]: 0.0.0
+  [dbname]: default
+  [description]: My Description for this database
   ```
 
 ## Examples
 * Import words from `lista.txt` and tag as `lista`
   ```
-  orunmila -tags lista lista.txt
+  orunmila import -tags lista lista.txt
   ```
 
 * List words with tag as `lista`
@@ -76,16 +87,21 @@ Take the following hypothetical scenario, we have a target system that is based 
 
 Using orunmila we extract the keywords that match our criteria
 ```sh
-orunmila -tags drupal,dir,nginx,php >drupal_words.txt
+orunmila search -tags drupal,dir,nginx,php >drupal_words.txt
 ffuf -w drupal_words.txt -u https://drupal-target/FUZZ
 ```
 
 The tool supports using specific database files ie
 ```
-orunmila -db programXYZ.db -tags nginx,soap,swift,api,xml
+orunmila search -db programXYZ.db -tags nginx,soap,swift,api,xml
 ```
 
 You can use Orunmila to import wordlists into your database with given set of tags. Existing words will have their tags updated to include old and new ones
 ```
-orunmila -db programXYZ.db -tags raft,directories,manual raft-medium-directories.txt
+orunmila import -db programXYZ.db -tags raft,directories,manual raft-medium-directories.txt
+```
+
+Add a new drupal entry you discovered from the command line (without file)
+```
+orunmila add -tags drupal,directory word1 word2
 ```
