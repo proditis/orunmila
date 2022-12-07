@@ -558,7 +558,9 @@ func main() {
 	case "vacuum", "vac", "v":
 		vacuumSubcmd(args)
 	default:
-		log.Fatalf("Unrecognized subcommand: %q", subcommand)
+		log.Errorf("Unrecognized subcommand: %q", subcommand)
+		flag.Usage()
+		os.Exit(1)
 		// TODO print help menu
 	}
 
