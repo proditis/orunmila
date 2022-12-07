@@ -274,10 +274,12 @@ func createDbFileifNotExist(dbPtr string) {
 // parse args of the import subcommand and exec it
 func vacuumSubcmd(args []string) {
 	flag := flag.NewFlagSet("vacuum", flag.ContinueOnError)
+
 	var (
 		dbPtr    = flag.String("db", defaultDBPath, "the database filename (default: orunmila.db")
 		debugPtr = flag.Bool("debug", false, "enable debug")
 	)
+
 	flag.Parse(args)
 
 	if *debugPtr {
@@ -290,10 +292,10 @@ func vacuumSubcmd(args []string) {
 	createDB(dsn)
 	db, err := sql.Open("sqlite3", dsn)
 	check(err)
+
 	defer db.Close()
 	_, err = db.Query("VACUUM")
 	check(err)
-
 }
 
 func describeSubcmd(args []string) {
@@ -331,24 +333,27 @@ func describeSubcmd(args []string) {
 	db, err := sql.Open("sqlite3", dsn)
 	check(err)
 	defer db.Close()
+
 	tx, err := db.Begin()
 	check(err)
 
 	descStmt, err := tx.Prepare("INSERT OR REPLACE INTO sysconfig(name,val) values (?,?)")
 	check(err)
 	defer descStmt.Close()
+
 	desc := strings.TrimSpace(strings.Join(flag.Args(), " "))
 	descStmt.Exec("description", desc)
 	err = tx.Commit()
 	check(err)
-
 }
 
 func infoSubcmd(args []string) {
 	flag := flag.NewFlagSet("info", flag.ContinueOnError)
+
 	var (
 		dbPtr = flag.String("db", defaultDBPath, "the database filename (default: orunmila.db")
 	)
+
 	flag.Parse(args)
 
 	// TODO print an error message
@@ -445,7 +450,7 @@ func addSubcmd(args []string) {
 					log.Println("Found word id:", word_id)
 				}
 			}
-			//
+
 			log.Debugf("[addSubcmd] word: %s => id: %d\n", word, word_id)
 			for tag, tag_id := range Tags {
 				log.Debugf("[addSubcmd] adding wt(%d,%d) // %s %s", word_id, tag_id, word, tag)
@@ -511,8 +516,8 @@ func importSubcmd(args []string) {
 
 // parse args of the import subcommand and exec it
 func searchSubcmd(args []string) {
-
 	flag := flag.NewFlagSet("search", flag.ExitOnError)
+
 	var (
 		dbPtr    = flag.String("db", defaultDBPath, "the database filename (default: orunmila.db")
 		tagsPtr  = flag.String("tags", "", "a comma separated list of the tags to use")
@@ -532,10 +537,12 @@ func searchSubcmd(args []string) {
 	createDbFileifNotExist(*dbPtr)
 
 	Tags = stringToArray(*tagsPtr)
+
 	dsn := fmt.Sprintf("file:%s?mode=ro", *dbPtr)
 	db, err := sql.Open("sqlite3", dsn)
 	check(err)
 	defer db.Close()
+
 	searchWordsByTagIds(db, *tagsPtr)
 }
 
