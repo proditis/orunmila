@@ -245,6 +245,8 @@ func searchWordsByTagIds(db *sql.DB, tags string) {
 	}
 	err = rows.Err()
 	check(err)
+
+	db.Close()
 }
 
 // check if file exists
@@ -282,6 +284,7 @@ func vacuumSubcmd() {
 	check(err)
 
 	log.Println("database rebuilt successfully")
+	db.Close()
 }
 
 // parse args of the describe subcommand and exec it
@@ -323,6 +326,8 @@ func describeSubcmd(args []string) {
 
 	err = tx.Commit()
 	check(err)
+
+	db.Close()
 }
 
 // parse args of the info subcommand and exec it
@@ -350,6 +355,8 @@ func infoSubcmd() {
 	}
 	err = rows.Err()
 	check(err)
+
+	db.Close()
 }
 
 // parse args of the add subcommand and exec it
@@ -427,6 +434,8 @@ func addSubcmd(args []string) {
 	}
 	err = tx.Commit()
 	check(err)
+
+	db.Close()
 }
 
 // parse args of the import subcommand and exec it
@@ -469,6 +478,8 @@ func importSubcmd(args []string) {
 			log.Warnf("[importSubcmd] %q does not exists.", importCmd.Arg(i))
 		}
 	}
+
+	db.Close()
 }
 
 // parse args of the search subcommand and exec it
