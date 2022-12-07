@@ -326,7 +326,7 @@ func describeSubcmd(args []string) {
 	check(err)
 	defer descStmt.Close()
 
-	desc := strings.TrimSpace(strings.Join(flag.Args(), " "))
+	desc := strings.TrimSpace(strings.Join(args, " "))
 	_, err = descStmt.Exec("description", desc)
 	check(err)
 
