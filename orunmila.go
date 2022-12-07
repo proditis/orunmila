@@ -272,6 +272,65 @@ func vacuumSubcmd(args []string) {
 
 }
 
+func describeSubcmd(args []string) {
+	path, err := os.Getwd()
+	check(err)
+
+	flag := flag.NewFlagSet("describe", flag.ContinueOnError)
+	var (
+		dbPtr = flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
+	)
+	flag.Parse(args)
+
+	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
+	db, err := sql.Open("sqlite3", dsn)
+	check(err)
+	defer db.Close()
+	tx, err := db.Begin()
+	check(err)
+
+	descStmt, err := tx.Prepare("INSERT OR REPLACE INTO sysconfig(name,val) values (?,?)")
+	check(err)
+	defer descStmt.Close()
+	desc := strings.TrimSpace(strings.Join(flag.Args(), " "))
+	descStmt.Exec("description", desc)
+	err = tx.Commit()
+	check(err)
+
+}
+
+func infoSubcmd(args []string) {
+	path, err := os.Getwd()
+	check(err)
+
+	flag := flag.NewFlagSet("info", flag.ContinueOnError)
+	var (
+		dbPtr = flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
+	)
+	flag.Parse(args)
+
+	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
+	db, err := sql.Open("sqlite3", dsn)
+	check(err)
+	defer db.Close()
+
+	rows, err := db.Query("SELECT * FROM sysconfig")
+	check(err)
+	defer rows.Close()
+
+	for rows.Next() {
+		var name string
+		var val string
+		err = rows.Scan(&name, &val)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("[%s]: %s\n", name, val)
+	}
+	err = rows.Err()
+	check(err)
+}
+
 // parse args of the import subcommand and exec it
 func addSubcmd(args []string) {
 	path, err := os.Getwd()
@@ -435,13 +494,17 @@ func main() {
 	// Words = stringToArray(*wordsPtr)
 
 	switch subcommand {
-	case "add":
+	case "add", "a":
 		addSubcmd(args)
-	case "import":
+	case "describe", "des", "d":
+		describeSubcmd(args)
+	case "info":
+		infoSubcmd(args)
+	case "import", "imp", "i":
 		importSubcmd(args)
-	case "search":
+	case "search", "sea", "s":
 		searchSubcmd(args)
-	case "vacuum":
+	case "vacuum", "vac", "v":
 		vacuumSubcmd(args)
 	default:
 		log.Fatalf("Unrecognized subcommand: %q", subcommand)
