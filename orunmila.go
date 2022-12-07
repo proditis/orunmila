@@ -62,9 +62,11 @@ func createDB(dbname string) {
 	defer db.Close()
 
 	sqlStmt := `
-	create table words (id integer not null primary key AUTOINCREMENT, name text NOT NULL UNIQUE);
-	create table tags (id integer not null primary key AUTOINCREMENT, name text NOT NULL UNIQUE);
-	create table wt (word_id integer not null , tag_id integer not null, FOREIGN KEY(word_id) REFERENCES words(id),FOREIGN KEY(tag_id) REFERENCES tags(id),PRIMARY KEY(word_id,tag_id));
+	create table IF NOT EXISTS words (id integer not null primary key AUTOINCREMENT, name text NOT NULL UNIQUE);
+	create table IF NOT EXISTS tags (id integer not null primary key AUTOINCREMENT, name text NOT NULL UNIQUE);
+	create table IF NOT EXISTS wt (word_id integer not null , tag_id integer not null, FOREIGN KEY(word_id) REFERENCES words(id),FOREIGN KEY(tag_id) REFERENCES tags(id),PRIMARY KEY(word_id,tag_id));
+	create table IF NOT EXISTS sysconfig(name text not null primary key, val text);
+	insert or ignore into sysconfig(name,val) values ("version","0.0.0"),("dbname","default");
 	`
 	_, err = db.Exec(sqlStmt)
 	if err != nil {
@@ -261,6 +263,7 @@ func vacuumSubcmd(args []string) {
 	flag.Parse(args)
 
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
+	createDB(dsn)
 	db, err := sql.Open("sqlite3", dsn)
 	check(err)
 	defer db.Close()
