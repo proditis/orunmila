@@ -261,7 +261,7 @@ func isFileExists(filename string) bool {
 }
 
 // create the db file if it doesn't exists
-func createDbFileifNotExist(dbPtr string) {
+func createDbFileifNotExists(dbPtr string) {
 	if !isFileExists(dbPtr) {
 		log.Debugln("database does not exist, creating...")
 		if dbPtr != defaultDBPath {
@@ -286,7 +286,7 @@ func vacuumSubcmd(args []string) {
 		log.SetLevel(log.DebugLevel)
 	}
 
-	createDbFileifNotExist(*dbPtr)
+	createDbFileifNotExists(*dbPtr)
 
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
 	createDB(dsn)
@@ -327,7 +327,7 @@ func describeSubcmd(args []string) {
 		os.Exit(1)
 	}
 
-	createDbFileifNotExist(*dbPtr)
+	createDbFileifNotExists(*dbPtr)
 
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
 	db, err := sql.Open("sqlite3", dsn)
@@ -412,7 +412,7 @@ func addSubcmd(args []string) {
 
 	log.Infoln("[addSubcmd] Adding the given words:", flag.Args())
 
-	createDbFileifNotExist(*dbPtr)
+	createDbFileifNotExists(*dbPtr)
 
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
 	db, err := sql.Open("sqlite3", dsn)
@@ -534,7 +534,7 @@ func searchSubcmd(args []string) {
 	log.Debugln("[searchSubcmd] using tags:", *tagsPtr)
 	log.Println("[searchSubcmd] no filename given, performing a search")
 
-	createDbFileifNotExist(*dbPtr)
+	createDbFileifNotExists(*dbPtr)
 
 	Tags = stringToArray(*tagsPtr)
 
@@ -585,7 +585,7 @@ func main() {
 	log.Debugln("[main] using db:", *dbPtr)
 	log.Debugln("[main] debug mode:", *debugPtr)
 
-	createDbFileifNotExist(*dbPtr)
+	createDbFileifNotExists(*dbPtr)
 
 	// poor guy, for now
 	// Words = stringToArray(*wordsPtr)
