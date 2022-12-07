@@ -35,9 +35,9 @@ go build orunmila.go
 ```
   orunmila search -tags a,b,c filename
 ```
-* vacuum database
+* vacuum database and apply any schema updates
   ```sh
-  orunmila vacuume a
+  orunmila vacuum a
   ```
 
 ## Examples
