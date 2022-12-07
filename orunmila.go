@@ -48,7 +48,7 @@ func getTagId(db *sql.DB, tag string) int64 {
 func getWordId(db *sql.DB, word string) int64 {
 	var id int64
 
-	err := db.QueryRow("select id from tags where name = ?", word).Scan(&id)
+	err := db.QueryRow("select id from words where name = ?", word).Scan(&id)
 	if err != nil {
 		id = -1
 	}
@@ -243,6 +243,93 @@ func isFileExists(filename string) bool {
 }
 
 // parse args of the import subcommand and exec it
+func vacuumSubcmd(args []string) {
+	path, err := os.Getwd()
+	check(err)
+
+	flag := flag.NewFlagSet("vacuum", flag.ContinueOnError)
+	var (
+		dbPtr = flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
+	)
+	flag.Parse(args)
+
+	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
+	db, err := sql.Open("sqlite3", dsn)
+	check(err)
+	defer db.Close()
+	_, err = db.Query("VACUUM")
+	check(err)
+
+}
+
+// parse args of the import subcommand and exec it
+func addSubcmd(args []string) {
+	path, err := os.Getwd()
+	check(err)
+
+	flag := flag.NewFlagSet("add", flag.ExitOnError)
+	var (
+		dbPtr   = flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
+		tagsPtr = flag.String("tags", "", "a comma separated list of the tags to use")
+	)
+
+	flag.Parse(args)
+
+	log.Infoln("Importing the given words:", flag.Args())
+
+	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
+	db, err := sql.Open("sqlite3", dsn)
+	check(err)
+	defer db.Close()
+
+	Tags = stringToArray(*tagsPtr)
+	importTags(db)
+
+	tx, err := db.Begin()
+	check(err)
+
+	wordsStmt, err := tx.Prepare("insert or ignore into words(name) values(?)")
+	check(err)
+	defer wordsStmt.Close()
+
+	wtStmt, err := tx.Prepare("insert or ignore into wt(word_id,tag_id) values(?,?)")
+	check(err)
+	defer wtStmt.Close()
+
+	for i := 0; i < flag.NArg(); i++ {
+		log.Println("adding word:", flag.Arg(i))
+		word := strings.TrimSpace(flag.Arg(i))
+		var word_id int64
+		if word != "" {
+			log.Debugln("importing word:", word)
+			if word_id = getWordId(db, word); word_id <= 0 {
+				result, err := wordsStmt.Exec(word)
+				check(err)
+				word_id, err = result.LastInsertId()
+				check(err)
+				if word_id <= 0 {
+					log.Debugf("word %s already exists, fetching", word)
+					word_id = getWordId(db, word)
+					log.Println("Found word id:", word_id)
+				}
+			}
+			//
+			log.Debugf("word: %s => id: %d\n", word, word_id)
+			for tag, tag_id := range Tags {
+				log.Debugf("adding wt(%d,%d) // %s %s", word_id, tag_id, word, tag)
+				_, err = wtStmt.Exec(word_id, tag_id)
+				if err != nil {
+					log.Error(err)
+				}
+			}
+			word_id = 0
+		}
+	}
+	err = tx.Commit()
+	check(err)
+}
+
+// parse args of the import subcommand and exec it
 func importSubcmd(args []string) {
 	path, err := os.Getwd()
 	check(err)
@@ -304,8 +391,6 @@ func main() {
 	check(err)
 
 	dbPtr := flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
-	// poor guy, for now
-	// wordsPtr := flag.String("words", "", "a comma separated list of words to add or search")
 	debugPtr := flag.Bool("debug", false, "enable debug")
 
 	flag.Parse()
@@ -340,10 +425,14 @@ func main() {
 	// Words = stringToArray(*wordsPtr)
 
 	switch subcommand {
+	case "add":
+		addSubcmd(args)
 	case "import":
 		importSubcmd(args)
 	case "search":
 		searchSubcmd(args)
+	case "vacuum":
+		vacuumSubcmd(args)
 	default:
 		log.Fatalf("Unrecognized subcommand: %q", subcommand)
 		// TODO print help menu
