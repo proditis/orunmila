@@ -269,7 +269,19 @@ func createDbFileifNotExists(dbPtr string) {
 }
 
 // parse args of the vaccum subcommand and exec it
-func vacuumSubcmd() {
+func vacuumSubcmd(args []string) {
+	vacuumCmd := flag.NewFlagSet("vacuum", flag.ExitOnError)
+
+	vacuumCmd.Usage = func() {
+		fmt.Fprint(vacuumCmd.Output(), "Rebuild the database file, repacking it into a minimal amount of disk space\n\n")
+		fmt.Fprintf(vacuumCmd.Output(), "Usage of orunmila vacuum:\n")
+		vacuumCmd.PrintDefaults()
+		fmt.Fprintln(vacuumCmd.Output(), "\texample: orunmila [-db <db_path>] vacuum")
+	}
+
+	// nothing to parse, just there to trigger the usage menu
+	vacuumCmd.Parse(args)
+
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
 	db, err := sql.Open("sqlite3", dsn)
 	check(err)
@@ -284,17 +296,17 @@ func vacuumSubcmd() {
 // parse args of the describe subcommand and exec it
 func describeSubcmd(args []string) {
 
-	flag := flag.NewFlagSet("describe", flag.ExitOnError)
+	descibeCmd := flag.NewFlagSet("describe", flag.ExitOnError)
 
-	flag.Usage = func() {
-		fmt.Fprint(flag.Output(), "Describe the database\n\n")
-		fmt.Fprintf(flag.Output(), "Usage of orunmila descibe:\n")
-		flag.PrintDefaults()
-		fmt.Fprintln(flag.Output(), "  words strings\n\tspace separated list of words to add")
-		fmt.Fprintln(flag.Output(), "\nexample: orunmila describe My Awesome Description")
+	descibeCmd.Usage = func() {
+		fmt.Fprint(descibeCmd.Output(), "Set the database description\n\n")
+		fmt.Fprintf(descibeCmd.Output(), "Usage of orunmila descibe:\n")
+		descibeCmd.PrintDefaults()
+		fmt.Fprintln(descibeCmd.Output(), "  words strings\n\tspace separated list of words to add")
+		fmt.Fprintln(descibeCmd.Output(), "\nexample: orunmila describe My Awesome Description")
 	}
 
-	flag.Parse(args)
+	descibeCmd.Parse(args)
 
 	if len(args) < 1 {
 		log.Errorln("please provide a description")
@@ -323,7 +335,19 @@ func describeSubcmd(args []string) {
 }
 
 // parse args of the info subcommand and exec it
-func infoSubcmd() {
+func infoSubcmd(args []string) {
+	infoCmd := flag.NewFlagSet("info", flag.ExitOnError)
+
+	infoCmd.Usage = func() {
+		fmt.Fprint(infoCmd.Output(), "Display database system configuration information\n\n")
+		fmt.Fprintf(infoCmd.Output(), "Usage of orunmila info:\n")
+		infoCmd.PrintDefaults()
+		fmt.Fprintln(infoCmd.Output(), "\texample: orunmila [-db <db_path>] info")
+	}
+
+	// nothing to parse, just there to trigger the usage menu
+	infoCmd.Parse(args)
+
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
 	db, err := sql.Open("sqlite3", dsn)
 	check(err)
@@ -427,7 +451,7 @@ func addSubcmd(args []string) {
 func importSubcmd(args []string) {
 	importCmd := flag.NewFlagSet("import", flag.ExitOnError)
 
-	flag.Usage = func() {
+	importCmd.Usage = func() {
 		fmt.Fprint(importCmd.Output(), "Import a word file into the database with optional tags\n\n")
 		fmt.Fprintf(importCmd.Output(), "Usage of orunmila import:\n")
 		importCmd.PrintDefaults()
@@ -537,13 +561,13 @@ func main() {
 	case "describe", "des", "d":
 		describeSubcmd(args)
 	case "info":
-		infoSubcmd()
+		infoSubcmd(args)
 	case "import", "imp", "i":
 		importSubcmd(args)
 	case "search", "sea", "s":
 		searchSubcmd(args)
 	case "vacuum", "vac", "v":
-		vacuumSubcmd()
+		vacuumSubcmd(args)
 	default:
 		log.Errorf("Unrecognized subcommand: %q", subcommand)
 		flag.Usage()
