@@ -276,12 +276,15 @@ func describeSubcmd(args []string) {
 	path, err := os.Getwd()
 	check(err)
 
-	flag := flag.NewFlagSet("describe", flag.ContinueOnError)
+	flag := flag.NewFlagSet("describe", flag.ExitOnError)
 	var (
 		dbPtr = flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
 	)
 	flag.Parse(args)
 
+	if len(args) < 1 {
+		log.Fatalln("please provide a description")
+	}
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
 	db, err := sql.Open("sqlite3", dsn)
 	check(err)
@@ -337,12 +340,25 @@ func addSubcmd(args []string) {
 	check(err)
 
 	flag := flag.NewFlagSet("add", flag.ExitOnError)
+
+	flag.Usage = func() {
+		fmt.Fprint(flag.Output(), "Add words to the database from the command line with optional tags\n\n")
+		fmt.Fprintf(flag.Output(), "Usage of orunmila add:\n")
+		flag.PrintDefaults()
+		fmt.Fprintln(flag.Output(), "  words strings\n\tspace separated list of words to add")
+	}
+
 	var (
 		dbPtr   = flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
 		tagsPtr = flag.String("tags", "", "a comma separated list of the tags to use")
 	)
 
 	flag.Parse(args)
+
+	if len(args) == 0 {
+		log.Fatalf("you need to provide words to be added")
+		// TODO print help menu corresponding to the subcommand
+	}
 
 	log.Infoln("Importing the given words:", flag.Args())
 
@@ -475,11 +491,6 @@ func main() {
 	}
 
 	subcommand, args := args[0], args[1:]
-
-	if len(args) == 0 {
-		log.Fatalf("No arguments have been specified to the subcommand %q", subcommand)
-		// TODO print help menu corresponding to the subcommand
-	}
 
 	// poor guy, for now
 	//log.Debugln("using words:", *wordsPtr)
