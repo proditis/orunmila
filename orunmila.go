@@ -19,6 +19,15 @@ var (
 	Words = make(map[string]int64)
 )
 
+func getDefaultDBPath() string {
+	path, err := os.Getwd()
+	check(err)
+
+	return filepath.Join(path, "orunmila.db")
+}
+
+var defaultDBPath = getDefaultDBPath()
+
 func check(e error) {
 	if e != nil {
 		log.Fatal(e)
@@ -253,12 +262,9 @@ func isFileExists(filename string) bool {
 
 // parse args of the import subcommand and exec it
 func vacuumSubcmd(args []string) {
-	path, err := os.Getwd()
-	check(err)
-
 	flag := flag.NewFlagSet("vacuum", flag.ContinueOnError)
 	var (
-		dbPtr = flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
+		dbPtr = flag.String("db", defaultDBPath, "the database filename (default: orunmila.db")
 	)
 	flag.Parse(args)
 
@@ -273,8 +279,6 @@ func vacuumSubcmd(args []string) {
 }
 
 func describeSubcmd(args []string) {
-	path, err := os.Getwd()
-	check(err)
 
 	flag := flag.NewFlagSet("describe", flag.ExitOnError)
 
@@ -287,7 +291,7 @@ func describeSubcmd(args []string) {
 	}
 
 	var (
-		dbPtr = flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
+		dbPtr = flag.String("db", defaultDBPath, "the database filename (default: orunmila.db")
 	)
 	flag.Parse(args)
 
@@ -314,12 +318,9 @@ func describeSubcmd(args []string) {
 }
 
 func infoSubcmd(args []string) {
-	path, err := os.Getwd()
-	check(err)
-
 	flag := flag.NewFlagSet("info", flag.ContinueOnError)
 	var (
-		dbPtr = flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
+		dbPtr = flag.String("db", defaultDBPath, "the database filename (default: orunmila.db")
 	)
 	flag.Parse(args)
 
@@ -347,9 +348,6 @@ func infoSubcmd(args []string) {
 
 // parse args of the import subcommand and exec it
 func addSubcmd(args []string) {
-	path, err := os.Getwd()
-	check(err)
-
 	flag := flag.NewFlagSet("add", flag.ExitOnError)
 
 	flag.Usage = func() {
@@ -360,7 +358,7 @@ func addSubcmd(args []string) {
 	}
 
 	var (
-		dbPtr   = flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
+		dbPtr   = flag.String("db", defaultDBPath, "the database filename (default: orunmila.db")
 		tagsPtr = flag.String("tags", "", "a comma separated list of the tags to use")
 	)
 
@@ -428,9 +426,6 @@ func addSubcmd(args []string) {
 
 // parse args of the import subcommand and exec it
 func importSubcmd(args []string) {
-	path, err := os.Getwd()
-	check(err)
-
 	flag := flag.NewFlagSet("import", flag.ExitOnError)
 
 	flag.Usage = func() {
@@ -441,7 +436,7 @@ func importSubcmd(args []string) {
 	}
 
 	var (
-		dbPtr   = flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
+		dbPtr   = flag.String("db", defaultDBPath, "the database filename (default: orunmila.db")
 		tagsPtr = flag.String("tags", "", "a comma separated list of the tags to use")
 	)
 
@@ -474,12 +469,10 @@ func importSubcmd(args []string) {
 
 // parse args of the import subcommand and exec it
 func searchSubcmd(args []string) {
-	path, err := os.Getwd()
-	check(err)
 
 	flag := flag.NewFlagSet("search", flag.ExitOnError)
 	var (
-		dbPtr   = flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
+		dbPtr   = flag.String("db", defaultDBPath, "the database filename (default: orunmila.db")
 		tagsPtr = flag.String("tags", "", "a comma separated list of the tags to use")
 	)
 
@@ -498,9 +491,6 @@ func searchSubcmd(args []string) {
 }
 
 func main() {
-	path, err := os.Getwd()
-	check(err)
-
 	flag.Usage = func() {
 		fmt.Fprint(flag.CommandLine.Output(), "~~~~~ orunmila word list manager ~~~~~\n\n")
 		fmt.Fprintf(flag.CommandLine.Output(), "Usage of orunmila:\n")
@@ -514,8 +504,10 @@ func main() {
 		fmt.Fprintln(flag.CommandLine.Output(), "  vacuum   Rebuild the database file, repacking it into a minimal amount of disk space")
 	}
 
-	dbPtr := flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
-	debugPtr := flag.Bool("debug", false, "enable debug")
+	var (
+		dbPtr    = flag.String("db", defaultDBPath, "the database filename (default: orunmila.db")
+		debugPtr = flag.Bool("debug", false, "enable debug")
+	)
 
 	flag.Parse()
 
