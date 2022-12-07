@@ -362,28 +362,28 @@ func infoSubcmd(args []string) {
 
 // parse args of the import subcommand and exec it
 func addSubcmd(args []string) {
-	flag := flag.NewFlagSet("add", flag.ExitOnError)
+	addCmd := flag.NewFlagSet("add", flag.ExitOnError)
 
-	flag.Usage = func() {
-		fmt.Fprint(flag.Output(), "Add words to the database from the command line with optional tags\n\n")
-		fmt.Fprintf(flag.Output(), "Usage of orunmila add:\n")
-		flag.PrintDefaults()
-		fmt.Fprintln(flag.Output(), "  words strings\n\tspace separated list of words to add")
+	addCmd.Usage = func() {
+		fmt.Fprint(addCmd.Output(), "Add words to the database from the command line with optional tags\n\n")
+		fmt.Fprintf(addCmd.Output(), "Usage of orunmila add:\n")
+		addCmd.PrintDefaults()
+		fmt.Fprintln(addCmd.Output(), "  words strings\n\tspace separated list of words to add")
 	}
 
 	var (
-		tagsPtr = flag.String("tags", "", "a comma separated list of the tags to use")
+		tagsPtr = addCmd.String("tags", "", "a comma separated list of the tags to use")
 	)
 
-	flag.Parse(args)
+	addCmd.Parse(args)
 
 	if len(args) == 0 {
 		log.Error("[addSubcmd] you need to provide words to be added")
-		flag.Usage()
+		addCmd.Usage()
 		os.Exit(1)
 	}
 
-	log.Infoln("[addSubcmd] Adding the given words:", flag.Args())
+	log.Infoln("[addSubcmd] Adding the given words:", addCmd.Args())
 
 	createDbFileifNotExists(*dbPtr)
 
@@ -406,9 +406,9 @@ func addSubcmd(args []string) {
 	check(err)
 	defer wtStmt.Close()
 
-	for i := 0; i < flag.NArg(); i++ {
-		log.Println("[addSubcmd] adding word:", flag.Arg(i))
-		word := strings.TrimSpace(flag.Arg(i))
+	for i := 0; i < addCmd.NArg(); i++ {
+		log.Println("[addSubcmd] adding word:", addCmd.Arg(i))
+		word := strings.TrimSpace(addCmd.Arg(i))
 		var word_id int64
 		if word != "" {
 			log.Debugln("[addSubcmd] importing word:", word)
@@ -441,28 +441,28 @@ func addSubcmd(args []string) {
 
 // parse args of the import subcommand and exec it
 func importSubcmd(args []string) {
-	flag := flag.NewFlagSet("import", flag.ExitOnError)
+	importCmd := flag.NewFlagSet("import", flag.ExitOnError)
 
 	flag.Usage = func() {
-		fmt.Fprint(flag.Output(), "Import a word file into the database with optional tags\n\n")
-		fmt.Fprintf(flag.Output(), "Usage of orunmila import:\n")
-		flag.PrintDefaults()
-		fmt.Fprintln(flag.Output(), "  filename\n\tthe filename to read the words from")
+		fmt.Fprint(importCmd.Output(), "Import a word file into the database with optional tags\n\n")
+		fmt.Fprintf(importCmd.Output(), "Usage of orunmila import:\n")
+		importCmd.PrintDefaults()
+		fmt.Fprintln(importCmd.Output(), "  filename\n\tthe filename to read the words from")
 	}
 
 	var (
-		tagsPtr = flag.String("tags", "", "a comma separated list of the tags to use")
+		tagsPtr = importCmd.String("tags", "", "a comma separated list of the tags to use")
 	)
 
-	flag.Parse(args)
+	importCmd.Parse(args)
 
 	if len(args) == 0 {
 		log.Error("[importSubcmd] you need to provide at least a filename")
-		flag.Usage()
+		importCmd.Usage()
 		os.Exit(1)
 	}
 
-	log.Println("performing an import on the given files:", flag.Args())
+	log.Println("performing an import on the given files:", importCmd.Args())
 
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
 	db, err := sql.Open("sqlite3", dsn)
@@ -471,25 +471,25 @@ func importSubcmd(args []string) {
 
 	Tags = stringToArray(*tagsPtr)
 
-	for i := 0; i < flag.NArg(); i++ {
-		log.Println("[importSubcmd] importing file:", flag.Arg(i))
-		if isFileExists(flag.Arg(i)) {
-			importFileWords(db, *tagsPtr, flag.Arg(i))
+	for i := 0; i < importCmd.NArg(); i++ {
+		log.Println("[importSubcmd] importing file:", importCmd.Arg(i))
+		if isFileExists(importCmd.Arg(i)) {
+			importFileWords(db, *tagsPtr, importCmd.Arg(i))
 		} else {
-			log.Warnf("[importSubcmd] %q does not exists.", flag.Arg(i))
+			log.Warnf("[importSubcmd] %q does not exists.", importCmd.Arg(i))
 		}
 	}
 }
 
 // parse args of the import subcommand and exec it
 func searchSubcmd(args []string) {
-	flag := flag.NewFlagSet("search", flag.ExitOnError)
+	searchCmd := flag.NewFlagSet("search", flag.ExitOnError)
 
 	var (
-		tagsPtr = flag.String("tags", "", "a comma separated list of the tags to use")
+		tagsPtr = searchCmd.String("tags", "", "a comma separated list of the tags to use")
 	)
 
-	flag.Parse(args)
+	searchCmd.Parse(args)
 
 	log.Debugln("[searchSubcmd] using db:", *dbPtr)
 	log.Debugln("[searchSubcmd] using tags:", *tagsPtr)
