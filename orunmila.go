@@ -331,9 +331,6 @@ func describeSubcmd(args []string) {
 
 // parse args of the info subcommand and exec it
 func infoSubcmd() {
-	// parse global args instead
-	flag.Parse()
-
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
 	db, err := sql.Open("sqlite3", dsn)
 	check(err)
