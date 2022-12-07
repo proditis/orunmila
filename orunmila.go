@@ -245,8 +245,6 @@ func searchWordsByTagIds(db *sql.DB, tags string) {
 	}
 	err = rows.Err()
 	check(err)
-
-	db.Close()
 }
 
 // check if file exists
@@ -500,6 +498,8 @@ func searchSubcmd(args []string) {
 	defer db.Close()
 
 	searchWordsByTagIds(db, *tagsPtr)
+
+	db.Close()
 }
 
 func main() {
