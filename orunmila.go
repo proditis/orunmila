@@ -260,6 +260,17 @@ func isFileExists(filename string) bool {
 	return true
 }
 
+// create the db file if it doesn't exists
+func createDbFileifNotExist(dbPtr string) {
+	if !isFileExists(dbPtr) {
+		log.Debugln("database does not exist, creating...")
+		if dbPtr != defaultDBPath {
+			defaultDBPath = dbPtr
+		}
+		createDB(dbPtr)
+	}
+}
+
 // parse args of the import subcommand and exec it
 func vacuumSubcmd(args []string) {
 	flag := flag.NewFlagSet("vacuum", flag.ContinueOnError)
@@ -272,6 +283,8 @@ func vacuumSubcmd(args []string) {
 	if *debugPtr {
 		log.SetLevel(log.DebugLevel)
 	}
+
+	createDbFileifNotExist(*dbPtr)
 
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
 	createDB(dsn)
@@ -311,6 +324,9 @@ func describeSubcmd(args []string) {
 		flag.Usage()
 		os.Exit(1)
 	}
+
+	createDbFileifNotExist(*dbPtr)
+
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
 	db, err := sql.Open("sqlite3", dsn)
 	check(err)
@@ -334,6 +350,9 @@ func infoSubcmd(args []string) {
 		dbPtr = flag.String("db", defaultDBPath, "the database filename (default: orunmila.db")
 	)
 	flag.Parse(args)
+
+	// TODO print an error message
+	// if db does not exists
 
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
 	db, err := sql.Open("sqlite3", dsn)
@@ -387,6 +406,8 @@ func addSubcmd(args []string) {
 	}
 
 	log.Infoln("[addSubcmd] Adding the given words:", flag.Args())
+
+	createDbFileifNotExist(*dbPtr)
 
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
 	db, err := sql.Open("sqlite3", dsn)
@@ -508,6 +529,8 @@ func searchSubcmd(args []string) {
 	log.Debugln("[searchSubcmd] using tags:", *tagsPtr)
 	log.Println("[searchSubcmd] no filename given, performing a search")
 
+	createDbFileifNotExist(*dbPtr)
+
 	Tags = stringToArray(*tagsPtr)
 	dsn := fmt.Sprintf("file:%s?mode=ro", *dbPtr)
 	db, err := sql.Open("sqlite3", dsn)
@@ -555,10 +578,7 @@ func main() {
 	log.Debugln("[main] using db:", *dbPtr)
 	log.Debugln("[main] debug mode:", *debugPtr)
 
-	if !isFileExists(*dbPtr) {
-		log.Debugln("[main] database does not exist, creating...")
-		createDB(*dbPtr)
-	}
+	createDbFileifNotExist(*dbPtr)
 
 	// poor guy, for now
 	// Words = stringToArray(*wordsPtr)
