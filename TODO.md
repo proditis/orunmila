@@ -12,9 +12,9 @@
 * [x] Make sure the database files are created into the current working directory and not wherever the binary is installed
 * [ ] Add help subcommand with usage
 * [ ] Make operations into subcommands
-  * [ ] import: imports a file into the database
-  * [ ] search: searches the database for the given tags
-  * [ ] add: add entries to the database from the cli
+  * [x] import: imports a file into the database
+  * [x] search: searches the database for the given tags
+  * [x] add: add entries to the database from the cli
   * [ ] delw: delete words from the database `-words` and/or `-tags`
   * [ ] delt: delete tags from the database `-words` and/or `-tags`
   * [ ] delwt: delete associations between `-words` and/or `-tags`
