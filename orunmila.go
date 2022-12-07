@@ -277,13 +277,24 @@ func describeSubcmd(args []string) {
 	check(err)
 
 	flag := flag.NewFlagSet("describe", flag.ExitOnError)
+
+	flag.Usage = func() {
+		fmt.Fprint(flag.Output(), "Describe the database\n\n")
+		fmt.Fprintf(flag.Output(), "Usage of orunmila descibe:\n")
+		flag.PrintDefaults()
+		fmt.Fprintln(flag.Output(), "  words strings\n\tspace separated list of words to add")
+		fmt.Fprintln(flag.Output(), "\nexample: orunmila describe My Awesome Description")
+	}
+
 	var (
 		dbPtr = flag.String("db", filepath.Join(path, "orunmila.db"), "the database filename (default: orunmila.db)")
 	)
 	flag.Parse(args)
 
 	if len(args) < 1 {
-		log.Fatalln("please provide a description")
+		log.Errorln("please provide a description")
+		flag.Usage()
+		os.Exit(1)
 	}
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
 	db, err := sql.Open("sqlite3", dsn)
@@ -513,14 +524,13 @@ func main() {
 	}
 
 	args := flag.Args()
+	var subcommand string
 	if len(args) == 0 {
-		log.Error("No subcommand has been specified")
-		flag.Usage()
-		os.Exit(1)
-		// TODO print help menu
+		log.Debugln("No subcommand has been specified, defaulting to search")
+		subcommand, args = "search", []string{}
+	} else {
+		subcommand, args = args[0], args[1:]
 	}
-
-	subcommand, args := args[0], args[1:]
 
 	// poor guy, for now
 	//log.Debugln("using words:", *wordsPtr)
