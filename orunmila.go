@@ -268,7 +268,7 @@ func createDbFileifNotExists(dbPtr string) {
 	}
 }
 
-// parse args of the import subcommand and exec it
+// parse args of the vaccum subcommand and exec it
 func vacuumSubcmd() {
 	// parse the global args instead (debug && db path)
 	flag.Parse()
@@ -284,6 +284,7 @@ func vacuumSubcmd() {
 	log.Println("database rebuilt successfully")
 }
 
+// parse args of the describe subcommand and exec it
 func describeSubcmd(args []string) {
 
 	flag := flag.NewFlagSet("describe", flag.ExitOnError)
@@ -324,6 +325,7 @@ func describeSubcmd(args []string) {
 	check(err)
 }
 
+// parse args of the info subcommand and exec it
 func infoSubcmd() {
 	// parse global args instead
 	flag.Parse()
@@ -350,7 +352,7 @@ func infoSubcmd() {
 	check(err)
 }
 
-// parse args of the import subcommand and exec it
+// parse args of the add subcommand and exec it
 func addSubcmd(args []string) {
 	addCmd := flag.NewFlagSet("add", flag.ExitOnError)
 
@@ -469,7 +471,7 @@ func importSubcmd(args []string) {
 	}
 }
 
-// parse args of the import subcommand and exec it
+// parse args of the search subcommand and exec it
 func searchSubcmd(args []string) {
 	searchCmd := flag.NewFlagSet("search", flag.ExitOnError)
 
