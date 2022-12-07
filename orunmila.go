@@ -270,8 +270,6 @@ func createDbFileifNotExists(dbPtr string) {
 
 // parse args of the vaccum subcommand and exec it
 func vacuumSubcmd() {
-	// parse the global args instead (debug && db path)
-
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
 	db, err := sql.Open("sqlite3", dsn)
 	check(err)
@@ -281,7 +279,6 @@ func vacuumSubcmd() {
 	check(err)
 
 	log.Println("database rebuilt successfully")
-	db.Close()
 }
 
 // parse args of the describe subcommand and exec it
@@ -323,8 +320,6 @@ func describeSubcmd(args []string) {
 
 	err = tx.Commit()
 	check(err)
-
-	db.Close()
 }
 
 // parse args of the info subcommand and exec it
@@ -349,8 +344,6 @@ func infoSubcmd() {
 	}
 	err = rows.Err()
 	check(err)
-
-	db.Close()
 }
 
 // parse args of the add subcommand and exec it
@@ -428,8 +421,6 @@ func addSubcmd(args []string) {
 	}
 	err = tx.Commit()
 	check(err)
-
-	db.Close()
 }
 
 // parse args of the import subcommand and exec it
@@ -472,8 +463,6 @@ func importSubcmd(args []string) {
 			log.Warnf("[importSubcmd] %q does not exists.", importCmd.Arg(i))
 		}
 	}
-
-	db.Close()
 }
 
 // parse args of the search subcommand and exec it
@@ -498,8 +487,6 @@ func searchSubcmd(args []string) {
 	defer db.Close()
 
 	searchWordsByTagIds(db, *tagsPtr)
-
-	db.Close()
 }
 
 func main() {
