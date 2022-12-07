@@ -269,10 +269,9 @@ func createDbFileifNotExists(dbPtr string) {
 }
 
 // parse args of the import subcommand and exec it
-func vacuumSubcmd(args []string) {
-	flag := flag.NewFlagSet("vacuum", flag.ContinueOnError)
-
-	flag.Parse(args)
+func vacuumSubcmd() {
+	// parse the global args instead (debug && db path)
+	flag.Parse()
 
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
 	db, err := sql.Open("sqlite3", dsn)
@@ -325,13 +324,9 @@ func describeSubcmd(args []string) {
 	check(err)
 }
 
-func infoSubcmd(args []string) {
-	flag := flag.NewFlagSet("info", flag.ContinueOnError)
-
-	flag.Parse(args)
-
-	// TODO print an error message
-	// if db does not exists
+func infoSubcmd() {
+	// parse global args instead
+	flag.Parse()
 
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
 	db, err := sql.Open("sqlite3", dsn)
@@ -546,13 +541,13 @@ func main() {
 	case "describe", "des", "d":
 		describeSubcmd(args)
 	case "info":
-		infoSubcmd(args)
+		infoSubcmd()
 	case "import", "imp", "i":
 		importSubcmd(args)
 	case "search", "sea", "s":
 		searchSubcmd(args)
 	case "vacuum", "vac", "v":
-		vacuumSubcmd(args)
+		vacuumSubcmd()
 	default:
 		log.Errorf("Unrecognized subcommand: %q", subcommand)
 		flag.Usage()
