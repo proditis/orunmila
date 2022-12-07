@@ -483,7 +483,7 @@ func searchSubcmd(args []string) {
 
 	log.Debugln("[searchSubcmd] using db:", *dbPtr)
 	log.Debugln("[searchSubcmd] using tags:", *tagsPtr)
-	log.Println("[searchSubcmd] no filename given, performing a search")
+	log.Println("[searchSubcmd] performing a search")
 
 	Tags = stringToArray(*tagsPtr)
 
