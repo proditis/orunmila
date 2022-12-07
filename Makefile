@@ -7,10 +7,15 @@ all: dep test test_coverage vet build
 
 
 build:
-	GOARCH=amd64 GOOS=darwin  go build -o ${BINARY_NAME}-darwin      ${SOURCE}
-	GOARCH=amd64 GOOS=linux   go build -o ${BINARY_NAME}-linux       ${SOURCE}
-	GOARCH=amd64 GOOS=windows go build -o ${BINARY_NAME}-windows.exe ${SOURCE}
-	GOARCH=amd64 GOOS=openbsd go build -o ${BINARY_NAME}-openbsd     ${SOURCE}
+	GOARCH=amd64 GOOS=linux   go build -o ${BINARY_NAME}       ${SOURCE}
+
+releases:
+	GOARCH=amd64 GOOS=darwin  go build -o ${BINARY_NAME}-darwin      			 ${SOURCE}
+	GOARCH=amd64 GOOS=linux   go build -o ${BINARY_NAME}-linux       			 ${SOURCE}
+	GOARCH=amd64 GOOS=windows go build -o ${BINARY_NAME}-windows.exe 			 ${SOURCE}
+	GOARCH=amd64 GOOS=openbsd go build -o ${BINARY_NAME}-openbsd     			 ${SOURCE}
+	GOARCH=arm64 GOOS=linux   go build -o ${BINARY_NAME}-linux-arm64       ${SOURCE}
+	GOARCH=arm64 GOOS=openbsd go build -o ${BINARY_NAME}-openbsd-arm64     ${SOURCE}
 
 test:
 	go test ./...
@@ -37,7 +42,13 @@ cleandb:
 clean:
 	-go clean
 	-@rm coverage.out
+	-@rm ${BINARY_NAME}-darwin-amd64
+	-@rm ${BINARY_NAME}-linux-amd64
+	-@rm ${BINARY_NAME}-windows-amd64.exe
+	-@rm ${BINARY_NAME}-openbsd-amd64
+	-@rm ${BINARY_NAME}-linux-arm64
+	-@rm ${BINARY_NAME}-openbsd-arm64
 	-@rm ${BINARY_NAME}-darwin
 	-@rm ${BINARY_NAME}-linux
-	-@rm ${BINARY_NAME}-openbsd
 	-@rm ${BINARY_NAME}-windows.exe
+	-@rm ${BINARY_NAME}-openbsd
