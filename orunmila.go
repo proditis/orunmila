@@ -274,10 +274,7 @@ func vacuumSubcmd(args []string) {
 
 	flag.Parse(args)
 
-	createDbFileifNotExists(*dbPtr)
-
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
-	createDB(dsn)
 	db, err := sql.Open("sqlite3", dsn)
 	check(err)
 
@@ -307,8 +304,6 @@ func describeSubcmd(args []string) {
 		flag.Usage()
 		os.Exit(1)
 	}
-
-	createDbFileifNotExists(*dbPtr)
 
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
 	db, err := sql.Open("sqlite3", dsn)
@@ -384,8 +379,6 @@ func addSubcmd(args []string) {
 	}
 
 	log.Infoln("[addSubcmd] Adding the given words:", addCmd.Args())
-
-	createDbFileifNotExists(*dbPtr)
 
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
 	db, err := sql.Open("sqlite3", dsn)
@@ -494,8 +487,6 @@ func searchSubcmd(args []string) {
 	log.Debugln("[searchSubcmd] using db:", *dbPtr)
 	log.Debugln("[searchSubcmd] using tags:", *tagsPtr)
 	log.Println("[searchSubcmd] no filename given, performing a search")
-
-	createDbFileifNotExists(*dbPtr)
 
 	Tags = stringToArray(*tagsPtr)
 
