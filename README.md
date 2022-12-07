@@ -22,6 +22,24 @@ go build orunmila.go
 ```
 
 
+## Subcommands
+* add words from the cli
+  ```sh
+  orunmila add -tags a,b,c word1 word2 word3
+  ```
+* import words from a file
+  ```sh
+  orunmila import -tags a,b,c filename
+  ```
+* search words
+```
+  orunmila search -tags a,b,c filename
+```
+* vacuum database
+  ```sh
+  orunmila vacuume a
+  ```
+
 ## Examples
 * Import words from `lista.txt` and tag as `lista`
   ```
@@ -30,27 +48,27 @@ go build orunmila.go
 
 * List words with tag as `lista`
   ```
-  orunmila -tags lista
+  orunmila search -tags lista
   ```
 
 * Import words from `listb.txt` and tag as `listb`
   ```
-  orunmila -tags listb listb.txt
+  orunmila import -tags listb listb.txt
   ```
 
 * List words with tag as `listb`
   ```
-  orunmila -tags listb
+  orunmila search -tags listb
   ```
 
 * Import words from `lista.txt` and `listb.txt` and tag as `listc`
   ```
-  orunmila -tags listc lista.txt listb.txt
+  orunmila import -tags listc lista.txt listb.txt
   ```
 
 * List words with tag as `listc` (should return all words)
   ```
-  orunmila -tags listc
+  orunmila search -tags listc
   ```
 
 ### Drupal example
