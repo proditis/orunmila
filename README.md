@@ -1,11 +1,11 @@
 # Orunmila
-a simple tool to refine and produce lists for your bugbounty and pen-test engagements.
+A simple tool to refine and produce lists for your bugbounty and pen-test engagements.
 
-The idea behind it is fairly simple a small sqlite(??) database with each word associated tags. Each word in the dictionary can be associated with multiple tags.
+The idea behind it is fairly simple, a small sqlite(??) database with each word associated tags. Each word in the dictionary can be associated with multiple tags.
 This provides for a way to later request the words from a database based on specific tags and use the generated wordlist with you normal tools, be it ffuf, dirbuster etc.
 
 
-## Instalation
+## Installation
 
 ```sh
 GO111MODULE=on go install github.com/proditis/orunmila@latest
