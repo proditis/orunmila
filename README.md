@@ -1,47 +1,86 @@
 # Orunmila
-a simple system to refine and produce lists for your bugbounty and pen-test engagements.
+a simple tool to refine and produce lists for your bugbounty and pen-test engagements.
 
-The idea behind it is fairly simple a small sqlite(??) database with each word associated tags. Each word in the dictionary can be associated with multiple tags.
-This provides for a way to later request the words from a database based on specific tags and use the generated wordlist with you normal tools, be it ffuf, dirbuster etc.
+The idea behind it is fairly simple a small sqlite database with each entry associated with tags. This allows for a wide range of use cases but the simplest one can be for managing wordlists.
 
+This provides for a way to later request the entries from a database based on specific tags and use the generated wordlist with you normal tools, be it ffuf, dirbuster etc.
+
+
+## Instalation
+
+```sh
+GO111MODULE=on go install github.com/proditis/orunmila@latest
+```
 
 ## Building
 NOTE: This is still a really early prototype so not much of a build system into the mix.
 
 ```sh
-go build orunmila
+export CGO_ENABLED=1
+go get github.com/mattn/go-sqlite3
+go get github.com/sirupsen/logrus
+go build orunmila.go
 ```
 
+
+## Subcommands
+* **`add`** words from the cli
+  ```sh
+  orunmila add -tags a,b,c word1 word2 word3
+  ```
+* **`import`** words from a file
+  ```sh
+  orunmila import -tags a,b,c filename
+  ```
+* **`search`** words
+  ```
+    orunmila search -tags a,b,c filename
+  ```
+* **`vacuum`** database and apply any schema updates
+  ```sh
+  orunmila vacuum a
+  ```
+* **`describe`** a database
+  ```sh
+  orunmila describe My Description for this database
+  ```
+* **`info`** return information about a database
+  ```sh
+  $ orunmila info all
+  [version]: 0.0.0
+  [dbname]: default
+  [description]: My Description for this database
+  ```
 
 ## Examples
 * Import words from `lista.txt` and tag as `lista`
   ```
-  orunmila -tags lista lista.txt
+  orunmila import -tags lista lista.txt
   ```
 
 * List words with tag as `lista`
   ```
-  orunmila -tags lista
+  orunmila search -tags lista
   ```
 
 * Import words from `listb.txt` and tag as `listb`
   ```
-  orunmila -tags listb listb.txt
+  orunmila import -tags listb listb.txt
   ```
 
 * List words with tag as `listb`
   ```
-  orunmila -tags listb
+  orunmila search -tags listb
   ```
 
 * Import words from `lista.txt` and `listb.txt` and tag as `listc`
   ```
-  orunmila -tags listc lista.txt listb.txt
+  orunmila import -tags listc lista.txt listb.txt
   ```
 
 * List words with tag as `listc` (should return all words)
   ```
-  orunmila -tags listc
+  orunmila search -tags listc
   ```
 
 ### Drupal example
@@ -49,16 +88,21 @@ Take the following hypothetical scenario, we have a target system that is based 
 
 Using orunmila we extract the keywords that match our criteria
 ```sh
-orunmila -tags drupal,dir,nginx,php >drupal_words.txt
+orunmila search -tags drupal,dir,nginx,php >drupal_words.txt
 ffuf -w drupal_words.txt -u https://drupal-target/FUZZ
 ```
 
 The tool supports using specific database files ie
 ```
-orunmila -db programXYZ.db -tags nginx,soap,swift,api,xml
+orunmila search -db programXYZ.db -tags nginx,soap,swift,api,xml
 ```
 
-You can use Orunmila to import wordlists into your database with given set of tags. Existing words will have their tags updated to reflect the new ones
+You can use Orunmila to import wordlists into your database with given set of tags. Existing words will have their tags updated to include old and new ones
 ```
-orunmila -db programXYZ.db -tags raft,directories,manual raft-medium-directories.txt
+orunmila import -db programXYZ.db -tags raft,directories,manual raft-medium-directories.txt
+```
+
+Add a new drupal entry you discovered from the command line (without file)
+```
+orunmila add -tags drupal,directory word1 word2
 ```
