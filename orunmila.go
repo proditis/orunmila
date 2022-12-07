@@ -230,7 +230,7 @@ func searchWordsByTagIds(db *sql.DB, tags string) {
 		log.Infoln("Using tags:", Tags)
 		queryStr = fmt.Sprintf(queryStr+" left join wt as t2 on t2.word_id=t1.id WHERE t2.tag_id IN (%s) group by t1.id", TagsToString())
 	} else {
-		log.Infoln("No tags were given")
+		log.Infoln("No tags were given or tags no found")
 	}
 	rows, err := db.Query(queryStr)
 	check(err)
