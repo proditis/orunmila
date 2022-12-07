@@ -211,10 +211,17 @@ func importFileWords(db *sql.DB, tags string, filename string) {
 // Search for words matching tags
 //
 func searchWordsByTagIds(db *sql.DB, tags string) {
+	queryStr := "select t1.name from words as t1"
 	populateTagIds(db)
 	removeEmptyTags()
-	log.Println("Using tags:", Tags)
-	rows, err := db.Query(fmt.Sprintf("select t1.name from words as t1 left join wt as t2 on t2.word_id=t1.id WHERE t2.tag_id IN (%s) group by t1.id", TagsToString()))
+
+	if len(Tags) > 0 {
+		log.Infoln("Using tags:", Tags)
+		queryStr = fmt.Sprintf(queryStr+" left join wt as t2 on t2.word_id=t1.id WHERE t2.tag_id IN (%s) group by t1.id", TagsToString())
+	} else {
+		log.Infoln("No tags were given")
+	}
+	rows, err := db.Query(queryStr)
 	check(err)
 	defer rows.Close()
 	for rows.Next() {
