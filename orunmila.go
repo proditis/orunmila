@@ -478,9 +478,9 @@ func searchSubcmd(args []string) {
 
 	flag.Parse(args)
 
-	log.Debugln("using db:", *dbPtr)
-	log.Debugln("using tags:", *tagsPtr)
-	log.Println("no filename given, performing a search")
+	log.Debugln("[searchSubcmd] using db:", *dbPtr)
+	log.Debugln("[searchSubcmd] using tags:", *tagsPtr)
+	log.Println("[searchSubcmd] no filename given, performing a search")
 
 	Tags = stringToArray(*tagsPtr)
 	dsn := fmt.Sprintf("file:%s?mode=ro", *dbPtr)
@@ -526,7 +526,8 @@ func main() {
 
 	// poor guy, for now
 	//log.Debugln("using words:", *wordsPtr)
-	log.Debugln("debug:", *debugPtr)
+	log.Debugln("[main] using db:", *debugPtr)
+	log.Debugln("[main] debug mode:", *debugPtr)
 
 	if !isFileExists(*dbPtr) {
 		log.Debugln("database does not exist, creating...")
