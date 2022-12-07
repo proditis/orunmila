@@ -273,7 +273,6 @@ func createDbFileifNotExists(dbPtr string) {
 // parse args of the vaccum subcommand and exec it
 func vacuumSubcmd() {
 	// parse the global args instead (debug && db path)
-	flag.Parse()
 
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
 	db, err := sql.Open("sqlite3", dsn)
