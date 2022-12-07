@@ -264,9 +264,14 @@ func isFileExists(filename string) bool {
 func vacuumSubcmd(args []string) {
 	flag := flag.NewFlagSet("vacuum", flag.ContinueOnError)
 	var (
-		dbPtr = flag.String("db", defaultDBPath, "the database filename (default: orunmila.db")
+		dbPtr    = flag.String("db", defaultDBPath, "the database filename (default: orunmila.db")
+		debugPtr = flag.Bool("debug", false, "enable debug")
 	)
 	flag.Parse(args)
+
+	if *debugPtr {
+		log.SetLevel(log.DebugLevel)
+	}
 
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
 	createDB(dsn)
@@ -291,9 +296,15 @@ func describeSubcmd(args []string) {
 	}
 
 	var (
-		dbPtr = flag.String("db", defaultDBPath, "the database filename (default: orunmila.db")
+		dbPtr    = flag.String("db", defaultDBPath, "the database filename (default: orunmila.db")
+		debugPtr = flag.Bool("debug", false, "enable debug")
 	)
+
 	flag.Parse(args)
+
+	if *debugPtr {
+		log.SetLevel(log.DebugLevel)
+	}
 
 	if len(args) < 1 {
 		log.Errorln("please provide a description")
@@ -358,19 +369,24 @@ func addSubcmd(args []string) {
 	}
 
 	var (
-		dbPtr   = flag.String("db", defaultDBPath, "the database filename (default: orunmila.db")
-		tagsPtr = flag.String("tags", "", "a comma separated list of the tags to use")
+		dbPtr    = flag.String("db", defaultDBPath, "the database filename (default: orunmila.db")
+		tagsPtr  = flag.String("tags", "", "a comma separated list of the tags to use")
+		debugPtr = flag.Bool("debug", false, "enable debug")
 	)
 
 	flag.Parse(args)
 
+	if *debugPtr {
+		log.SetLevel(log.DebugLevel)
+	}
+
 	if len(args) == 0 {
-		log.Error("you need to provide words to be added")
+		log.Error("[addSubcmd] you need to provide words to be added")
 		flag.Usage()
 		os.Exit(1)
 	}
 
-	log.Infoln("Adding the given words:", flag.Args())
+	log.Infoln("[addSubcmd] Adding the given words:", flag.Args())
 
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
 	db, err := sql.Open("sqlite3", dsn)
@@ -392,26 +408,26 @@ func addSubcmd(args []string) {
 	defer wtStmt.Close()
 
 	for i := 0; i < flag.NArg(); i++ {
-		log.Println("adding word:", flag.Arg(i))
+		log.Println("[addSubcmd] adding word:", flag.Arg(i))
 		word := strings.TrimSpace(flag.Arg(i))
 		var word_id int64
 		if word != "" {
-			log.Debugln("importing word:", word)
+			log.Debugln("[addSubcmd] importing word:", word)
 			if word_id = getWordId(db, word); word_id <= 0 {
 				result, err := wordsStmt.Exec(word)
 				check(err)
 				word_id, err = result.LastInsertId()
 				check(err)
 				if word_id <= 0 {
-					log.Debugf("word %s already exists, fetching", word)
+					log.Debugf("[addSubcmd] word %s already exists, fetching", word)
 					word_id = getWordId(db, word)
 					log.Println("Found word id:", word_id)
 				}
 			}
 			//
-			log.Debugf("word: %s => id: %d\n", word, word_id)
+			log.Debugf("[addSubcmd] word: %s => id: %d\n", word, word_id)
 			for tag, tag_id := range Tags {
-				log.Debugf("adding wt(%d,%d) // %s %s", word_id, tag_id, word, tag)
+				log.Debugf("[addSubcmd] adding wt(%d,%d) // %s %s", word_id, tag_id, word, tag)
 				_, err = wtStmt.Exec(word_id, tag_id)
 				if err != nil {
 					log.Error(err)
@@ -436,14 +452,19 @@ func importSubcmd(args []string) {
 	}
 
 	var (
-		dbPtr   = flag.String("db", defaultDBPath, "the database filename (default: orunmila.db")
-		tagsPtr = flag.String("tags", "", "a comma separated list of the tags to use")
+		dbPtr    = flag.String("db", defaultDBPath, "the database filename (default: orunmila.db")
+		tagsPtr  = flag.String("tags", "", "a comma separated list of the tags to use")
+		debugPtr = flag.Bool("debug", false, "enable debug")
 	)
+
+	if *debugPtr {
+		log.SetLevel(log.DebugLevel)
+	}
 
 	flag.Parse(args)
 
 	if len(args) == 0 {
-		log.Error("you need to provide at least a filename")
+		log.Error("[importSubcmd] you need to provide at least a filename")
 		flag.Usage()
 		os.Exit(1)
 	}
@@ -458,11 +479,11 @@ func importSubcmd(args []string) {
 	Tags = stringToArray(*tagsPtr)
 
 	for i := 0; i < flag.NArg(); i++ {
-		log.Println("importing file:", flag.Arg(i))
+		log.Println("[importSubcmd] importing file:", flag.Arg(i))
 		if isFileExists(flag.Arg(i)) {
 			importFileWords(db, *tagsPtr, flag.Arg(i))
 		} else {
-			log.Warnf("%q does not exists.", flag.Arg(i))
+			log.Warnf("[importSubcmd] %q does not exists.", flag.Arg(i))
 		}
 	}
 }
@@ -472,11 +493,16 @@ func searchSubcmd(args []string) {
 
 	flag := flag.NewFlagSet("search", flag.ExitOnError)
 	var (
-		dbPtr   = flag.String("db", defaultDBPath, "the database filename (default: orunmila.db")
-		tagsPtr = flag.String("tags", "", "a comma separated list of the tags to use")
+		dbPtr    = flag.String("db", defaultDBPath, "the database filename (default: orunmila.db")
+		tagsPtr  = flag.String("tags", "", "a comma separated list of the tags to use")
+		debugPtr = flag.Bool("debug", false, "enable debug")
 	)
 
 	flag.Parse(args)
+
+	if *debugPtr {
+		log.SetLevel(log.DebugLevel)
+	}
 
 	log.Debugln("[searchSubcmd] using db:", *dbPtr)
 	log.Debugln("[searchSubcmd] using tags:", *tagsPtr)
@@ -518,7 +544,7 @@ func main() {
 	args := flag.Args()
 	var subcommand string
 	if len(args) == 0 {
-		log.Debugln("No subcommand has been specified, defaulting to search")
+		log.Debugln("[main] No subcommand has been specified, defaulting to search")
 		subcommand, args = "search", []string{}
 	} else {
 		subcommand, args = args[0], args[1:]
@@ -526,11 +552,11 @@ func main() {
 
 	// poor guy, for now
 	//log.Debugln("using words:", *wordsPtr)
-	log.Debugln("[main] using db:", *debugPtr)
+	log.Debugln("[main] using db:", *dbPtr)
 	log.Debugln("[main] debug mode:", *debugPtr)
 
 	if !isFileExists(*dbPtr) {
-		log.Debugln("database does not exist, creating...")
+		log.Debugln("[main] database does not exist, creating...")
 		createDB(*dbPtr)
 	}
 
