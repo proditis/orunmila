@@ -15,10 +15,12 @@ func addSubcmd(args []string) {
 	addCmd := flag.NewFlagSet("add", flag.ExitOnError)
 
 	addCmd.Usage = func() {
+		addCmd.SetOutput(flag.CommandLine.Output())
 		fmt.Fprint(addCmd.Output(), "Add words to the database from the command line with optional tags\n\n")
 		fmt.Fprintf(addCmd.Output(), "Usage of orunmila add:\n")
-		addCmd.PrintDefaults()
+		fmt.Fprintf(addCmd.Output(), "orunmila [-db <db_path>] [-debug] add [-tags OPTIONAL_TAGS] words to add\n\n")
 		fmt.Fprintln(addCmd.Output(), "  words strings\n\tspace separated words to add")
+		addCmd.PrintDefaults()
 	}
 
 	var (
