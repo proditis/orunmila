@@ -1,10 +1,8 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
-	"os"
 
 	log "github.com/sirupsen/logrus"
 
@@ -77,11 +75,12 @@ func main() {
 	case "vacuum", "vac", "v":
 		vacuumSubcmd(args)
 	default:
-		err = errors.New(fmt.Sprintf("Unrecognized subcommand: %q", subcommand))
+		fmt.Fprintln(flag.CommandLine.Output(), "Unrecognized subcommand:", subcommand)
 		flag.Usage()
+		exitCode = 1
 	}
 	if err != nil {
-		exitCode = -1
+		exitCode = 2
 	}
-	os.Exit(exitCode)
+	log.Exit(exitCode)
 }
