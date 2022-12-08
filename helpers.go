@@ -28,7 +28,7 @@ func check(e error) {
 func TagsToIdsInString() string {
 	var a []string
 	for _, id := range Tags {
-		log.Printf("[TagsToIdsInString] id => %d\n", id)
+		log.Debugf("[TagsToIdsInString] id => %d\n", id)
 		a = append(a, fmt.Sprint(id))
 	}
 
