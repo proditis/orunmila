@@ -149,7 +149,7 @@ func importTags(db *sql.DB) {
 }
 
 // Import the words from a given filename into the database
-func importFileWords(db *sql.DB, tags string, filename string) {
+func importFileWords(db *sql.DB, filename string) {
 
 	importTags(db)
 	log.Println(Tags)
@@ -230,7 +230,7 @@ func searchWordsByTagIds(db *sql.DB, tags string) {
 		log.Infoln("Using tags:", Tags)
 		queryStr = fmt.Sprintf(queryStr+" left join wt as t2 on t2.word_id=t1.id WHERE t2.tag_id IN (%s) group by t1.id", TagsToString())
 	} else {
-		log.Infoln("No tags were given")
+		log.Infoln("No tags were given or tags no found")
 	}
 	rows, err := db.Query(queryStr)
 	check(err)
@@ -268,16 +268,21 @@ func createDbFileifNotExists(dbPtr string) {
 	}
 }
 
-// parse args of the import subcommand and exec it
+// parse args of the vaccum subcommand and exec it
 func vacuumSubcmd(args []string) {
-	flag := flag.NewFlagSet("vacuum", flag.ContinueOnError)
+	vacuumCmd := flag.NewFlagSet("vacuum", flag.ExitOnError)
 
-	flag.Parse(args)
+	vacuumCmd.Usage = func() {
+		fmt.Fprint(vacuumCmd.Output(), "Rebuild the database file, repacking it into a minimal amount of disk space\n\n")
+		fmt.Fprintf(vacuumCmd.Output(), "Usage of orunmila vacuum:\n")
+		vacuumCmd.PrintDefaults()
+		fmt.Fprintln(vacuumCmd.Output(), "\texample: orunmila [-db <db_path>] vacuum")
+	}
 
-	createDbFileifNotExists(*dbPtr)
+	// nothing to parse, just there to trigger the usage menu
+	vacuumCmd.Parse(args)
 
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
-	createDB(dsn)
 	db, err := sql.Open("sqlite3", dsn)
 	check(err)
 
@@ -288,27 +293,26 @@ func vacuumSubcmd(args []string) {
 	log.Println("database rebuilt successfully")
 }
 
+// parse args of the describe subcommand and exec it
 func describeSubcmd(args []string) {
 
-	flag := flag.NewFlagSet("describe", flag.ExitOnError)
+	descibeCmd := flag.NewFlagSet("describe", flag.ExitOnError)
 
-	flag.Usage = func() {
-		fmt.Fprint(flag.Output(), "Describe the database\n\n")
-		fmt.Fprintf(flag.Output(), "Usage of orunmila descibe:\n")
-		flag.PrintDefaults()
-		fmt.Fprintln(flag.Output(), "  words strings\n\tspace separated list of words to add")
-		fmt.Fprintln(flag.Output(), "\nexample: orunmila describe My Awesome Description")
+	descibeCmd.Usage = func() {
+		fmt.Fprint(descibeCmd.Output(), "Set the database description\n\n")
+		fmt.Fprintf(descibeCmd.Output(), "Usage of orunmila descibe:\n")
+		descibeCmd.PrintDefaults()
+		fmt.Fprintln(descibeCmd.Output(), "  words strings\n\tspace separated list of words to add")
+		fmt.Fprintln(descibeCmd.Output(), "\nexample: orunmila describe My Awesome Description")
 	}
 
-	flag.Parse(args)
+	descibeCmd.Parse(args)
 
 	if len(args) < 1 {
 		log.Errorln("please provide a description")
 		flag.Usage()
 		os.Exit(1)
 	}
-
-	createDbFileifNotExists(*dbPtr)
 
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
 	db, err := sql.Open("sqlite3", dsn)
@@ -322,7 +326,7 @@ func describeSubcmd(args []string) {
 	check(err)
 	defer descStmt.Close()
 
-	desc := strings.TrimSpace(strings.Join(flag.Args(), " "))
+	desc := strings.TrimSpace(strings.Join(args, " "))
 	_, err = descStmt.Exec("description", desc)
 	check(err)
 
@@ -330,13 +334,19 @@ func describeSubcmd(args []string) {
 	check(err)
 }
 
+// parse args of the info subcommand and exec it
 func infoSubcmd(args []string) {
-	flag := flag.NewFlagSet("info", flag.ContinueOnError)
+	infoCmd := flag.NewFlagSet("info", flag.ExitOnError)
 
-	flag.Parse(args)
+	infoCmd.Usage = func() {
+		fmt.Fprint(infoCmd.Output(), "Display database system configuration information\n\n")
+		fmt.Fprintf(infoCmd.Output(), "Usage of orunmila info:\n")
+		infoCmd.PrintDefaults()
+		fmt.Fprintln(infoCmd.Output(), "\texample: orunmila [-db <db_path>] info")
+	}
 
-	// TODO print an error message
-	// if db does not exists
+	// nothing to parse, just there to trigger the usage menu
+	infoCmd.Parse(args)
 
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
 	db, err := sql.Open("sqlite3", dsn)
@@ -360,32 +370,30 @@ func infoSubcmd(args []string) {
 	check(err)
 }
 
-// parse args of the import subcommand and exec it
+// parse args of the add subcommand and exec it
 func addSubcmd(args []string) {
-	flag := flag.NewFlagSet("add", flag.ExitOnError)
+	addCmd := flag.NewFlagSet("add", flag.ExitOnError)
 
-	flag.Usage = func() {
-		fmt.Fprint(flag.Output(), "Add words to the database from the command line with optional tags\n\n")
-		fmt.Fprintf(flag.Output(), "Usage of orunmila add:\n")
-		flag.PrintDefaults()
-		fmt.Fprintln(flag.Output(), "  words strings\n\tspace separated list of words to add")
+	addCmd.Usage = func() {
+		fmt.Fprint(addCmd.Output(), "Add words to the database from the command line with optional tags\n\n")
+		fmt.Fprintf(addCmd.Output(), "Usage of orunmila add:\n")
+		addCmd.PrintDefaults()
+		fmt.Fprintln(addCmd.Output(), "  words strings\n\tspace separated list of words to add")
 	}
 
 	var (
-		tagsPtr = flag.String("tags", "", "a comma separated list of the tags to use")
+		tagsPtr = addCmd.String("tags", "", "a comma separated list of the tags to use")
 	)
 
-	flag.Parse(args)
+	addCmd.Parse(args)
 
 	if len(args) == 0 {
 		log.Error("[addSubcmd] you need to provide words to be added")
-		flag.Usage()
+		addCmd.Usage()
 		os.Exit(1)
 	}
 
-	log.Infoln("[addSubcmd] Adding the given words:", flag.Args())
-
-	createDbFileifNotExists(*dbPtr)
+	log.Infoln("[addSubcmd] Adding the given words:", addCmd.Args())
 
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
 	db, err := sql.Open("sqlite3", dsn)
@@ -406,9 +414,9 @@ func addSubcmd(args []string) {
 	check(err)
 	defer wtStmt.Close()
 
-	for i := 0; i < flag.NArg(); i++ {
-		log.Println("[addSubcmd] adding word:", flag.Arg(i))
-		word := strings.TrimSpace(flag.Arg(i))
+	for i := 0; i < addCmd.NArg(); i++ {
+		log.Println("[addSubcmd] adding word:", addCmd.Arg(i))
+		word := strings.TrimSpace(addCmd.Arg(i))
 		var word_id int64
 		if word != "" {
 			log.Debugln("[addSubcmd] importing word:", word)
@@ -441,28 +449,28 @@ func addSubcmd(args []string) {
 
 // parse args of the import subcommand and exec it
 func importSubcmd(args []string) {
-	flag := flag.NewFlagSet("import", flag.ExitOnError)
+	importCmd := flag.NewFlagSet("import", flag.ExitOnError)
 
-	flag.Usage = func() {
-		fmt.Fprint(flag.Output(), "Import a word file into the database with optional tags\n\n")
-		fmt.Fprintf(flag.Output(), "Usage of orunmila import:\n")
-		flag.PrintDefaults()
-		fmt.Fprintln(flag.Output(), "  filename\n\tthe filename to read the words from")
+	importCmd.Usage = func() {
+		fmt.Fprint(importCmd.Output(), "Import a word file into the database with optional tags\n\n")
+		fmt.Fprintf(importCmd.Output(), "Usage of orunmila import:\n")
+		importCmd.PrintDefaults()
+		fmt.Fprintln(importCmd.Output(), "  filename\n\tthe filename to read the words from")
 	}
 
 	var (
-		tagsPtr = flag.String("tags", "", "a comma separated list of the tags to use")
+		tagsPtr = importCmd.String("tags", "", "a comma separated list of the tags to use")
 	)
 
-	flag.Parse(args)
+	importCmd.Parse(args)
 
 	if len(args) == 0 {
 		log.Error("[importSubcmd] you need to provide at least a filename")
-		flag.Usage()
+		importCmd.Usage()
 		os.Exit(1)
 	}
 
-	log.Println("performing an import on the given files:", flag.Args())
+	log.Println("performing an import on the given files:", importCmd.Args())
 
 	dsn := fmt.Sprintf("file:%s?mode=rw", *dbPtr)
 	db, err := sql.Open("sqlite3", dsn)
@@ -471,31 +479,29 @@ func importSubcmd(args []string) {
 
 	Tags = stringToArray(*tagsPtr)
 
-	for i := 0; i < flag.NArg(); i++ {
-		log.Println("[importSubcmd] importing file:", flag.Arg(i))
-		if isFileExists(flag.Arg(i)) {
-			importFileWords(db, *tagsPtr, flag.Arg(i))
+	for i := 0; i < importCmd.NArg(); i++ {
+		log.Println("[importSubcmd] importing file:", importCmd.Arg(i))
+		if isFileExists(importCmd.Arg(i)) {
+			importFileWords(db, importCmd.Arg(i))
 		} else {
-			log.Warnf("[importSubcmd] %q does not exists.", flag.Arg(i))
+			log.Warnf("[importSubcmd] %q does not exists.", importCmd.Arg(i))
 		}
 	}
 }
 
-// parse args of the import subcommand and exec it
+// parse args of the search subcommand and exec it
 func searchSubcmd(args []string) {
-	flag := flag.NewFlagSet("search", flag.ExitOnError)
+	searchCmd := flag.NewFlagSet("search", flag.ExitOnError)
 
 	var (
-		tagsPtr = flag.String("tags", "", "a comma separated list of the tags to use")
+		tagsPtr = searchCmd.String("tags", "", "a comma separated list of the tags to use")
 	)
 
-	flag.Parse(args)
+	searchCmd.Parse(args)
 
 	log.Debugln("[searchSubcmd] using db:", *dbPtr)
 	log.Debugln("[searchSubcmd] using tags:", *tagsPtr)
-	log.Println("[searchSubcmd] no filename given, performing a search")
-
-	createDbFileifNotExists(*dbPtr)
+	log.Println("[searchSubcmd] performing a search")
 
 	Tags = stringToArray(*tagsPtr)
 
