@@ -228,6 +228,10 @@ func searchWordsByTagIds(db *sql.DB, tags string) {
 	populateTagIds(db)
 	removeEmptyTags()
 
+	if len(Tags) == 0 {
+		log.Fatalln("db is empty, insert some words with tags")
+	}
+
 	if len(tags) > 0 {
 		userTags := strings.Split(tags, ",")
 		log.Infoln("Using tags:", userTags)
