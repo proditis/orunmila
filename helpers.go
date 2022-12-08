@@ -35,16 +35,6 @@ func TagsToIdsInString() string {
 	return strings.Join(a, ",")
 }
 
-// Get all tags from the db into an array
-func getExistingTags() []string {
-	var a []string
-	for name := range Tags {
-		log.Printf("[getExistingTags] string => %s\n", name)
-		a = append(a, fmt.Sprint(name))
-	}
-	return a
-}
-
 // Gets the ID of a given tag
 func getTagId(db *sql.DB, tag string) int64 {
 	var id int64
@@ -156,7 +146,6 @@ func importFileWords(db *sql.DB, filename string) {
 
 	importTags(db)
 	log.Println(Tags)
-	log.Printf("%s", getExistingTags())
 	file, err := os.Open(filename)
 	check(err)
 	defer file.Close()
@@ -239,7 +228,6 @@ func searchWordsByTagIds(db *sql.DB, tags string) {
 	populateTagIds(db)
 	removeEmptyTags()
 
-	log.Println(getExistingTags())
 	if len(tags) > 0 {
 		userTags := strings.Split(tags, ",")
 		log.Infoln("Using tags:", userTags)
