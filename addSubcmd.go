@@ -18,7 +18,7 @@ func addSubcmd(args []string) {
 		fmt.Fprint(addCmd.Output(), "Add words to the database from the command line with optional tags\n\n")
 		fmt.Fprintf(addCmd.Output(), "Usage of orunmila add:\n")
 		addCmd.PrintDefaults()
-		fmt.Fprintln(addCmd.Output(), "  words strings\n\tspace separated list of words to add")
+		fmt.Fprintln(addCmd.Output(), "  words strings\n\tspace separated words to add")
 	}
 
 	var (
