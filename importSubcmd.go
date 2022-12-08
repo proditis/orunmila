@@ -15,9 +15,10 @@ func importSubcmd(args []string) {
 
 	importCmd.Usage = func() {
 		fmt.Fprint(importCmd.Output(), "Import a word file into the database with optional tags\n\n")
-		fmt.Fprintf(importCmd.Output(), "Usage of orunmila import:\n")
+		fmt.Fprintln(importCmd.Output(), "Usage of orunmila import:")
+		fmt.Fprintf(importCmd.Output(), "orunmila [-db <db_path>] [-debug] import -tags [tag]... [filesname]...\n\n")
+		fmt.Fprintln(importCmd.Output(), "  filename\n\tthe filename(s) to read the words from")
 		importCmd.PrintDefaults()
-		fmt.Fprintln(importCmd.Output(), "  filename\n\tthe filename to read the words from")
 	}
 
 	var (
