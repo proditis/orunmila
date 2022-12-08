@@ -9,8 +9,10 @@ on:
   pull_request:
     branches: [ "main" ]
 
-jobs:
+env:
+  GO_VERSION: 1.18
 
+jobs:
   build:
     runs-on: ubuntu-latest
     steps:
@@ -21,8 +23,14 @@ jobs:
       with:
         go-version: 1.18
 
+    - name: Get deps
+      run: go get -v -t -d ./...
+
     - name: Build
       run: go build -v ./...
 
     - name: Test
       run: go test -v ./...
+
+    - name: Test Coverage
+      run: go test ./... -test.v -coverprofile=coverage.out

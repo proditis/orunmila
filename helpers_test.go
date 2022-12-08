@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func init() {
@@ -34,25 +36,25 @@ func TestIsFileExists(t *testing.T) {
 	}
 }
 
-func TestTagsToString(t *testing.T) {
+func TestTagsToIdsInString(t *testing.T) {
 	Tags = make(map[string]int64)
 
 	wants := ""
-	if TagsToString() != wants {
-		t.Fatal(`Error: TagsToString not empty`)
+	if TagsToIdsInString() != wants {
+		t.Fatal(`Error: TagsToIdsInString not empty`)
 	}
 	Tags["test"] = 1
 	wants = "1"
-	got := TagsToString()
+	got := TagsToIdsInString()
 	if got != wants {
-		t.Fatalf(`Error: TagsToString got %s not %s`, got, wants)
+		t.Fatalf(`Error: TagsToIdsInString got %s not %s`, got, wants)
 	}
 	Tags["test2"] = -1
 	wants = "1,-1"
-	got = TagsToString()
+	got = TagsToIdsInString()
 	// hash maps have random order
 	if got != wants && got != "-1,1" {
-		t.Fatalf(`Error: TagsToString not %v got %v`, wants, got)
+		t.Fatalf(`Error: TagsToIdsInString not %v got %v`, wants, got)
 	}
 
 }
@@ -136,18 +138,13 @@ func TestRemoveEmptyTags(t *testing.T) {
 	}
 }
 func TestImportTags(t *testing.T) {
-	var wants map[string]int64
 	Tags = make(map[string]int64)
 	Tags = map[string]int64{
 		"a": -1,
 		"b": -1,
 		"c": -1,
 	}
-	wants = map[string]int64{
-		"a": 1,
-		"b": 2,
-		"c": 3,
-	}
+
 	createDbFileifNotExists("random.db")
 	defer os.Remove("random.db")
 
@@ -158,8 +155,9 @@ func TestImportTags(t *testing.T) {
 	defer db.Close()
 
 	importTags(db)
-	if !reflect.DeepEqual(Tags, wants) {
-		t.Fatalf(`Error: importTags wants %v got %v`, wants, Tags)
+
+	for k, v := range Tags {
+		assert.Greaterf(t, int64(v), int64(-1), `importTags: failed initial insert for key %v has id %v`, k, v)
 	}
 
 	Tags = map[string]int64{
@@ -168,8 +166,8 @@ func TestImportTags(t *testing.T) {
 		"c": -1,
 	}
 	importTags(db)
-	if !reflect.DeepEqual(Tags, wants) {
-		t.Fatalf(`Error: importTags didnt populate properly wants %v got %v`, wants, Tags)
+	for k, v := range Tags {
+		assert.Greaterf(t, int64(v), int64(-1), `importTags: failed to populate key %v has id %v`, k, v)
 	}
 
 	Tags = map[string]int64{
@@ -178,10 +176,10 @@ func TestImportTags(t *testing.T) {
 		"c": -1,
 		"d": -1,
 	}
-	wants["d"] = 4
+
 	importTags(db)
-	if !reflect.DeepEqual(Tags, wants) {
-		t.Fatalf(`Error: importTags didnt populate properly with new entry wants %v got %v`, wants, Tags)
+	for k, v := range Tags {
+		assert.Greaterf(t, int64(v), int64(-1), `importTags: populate existing and insert last\nkey %v has id %v`, k, v)
 	}
 
 }
@@ -209,4 +207,23 @@ func TestCreateDbFileifNotExists(t *testing.T) {
 	if os.IsNotExist(err) {
 		t.Fatal(err)
 	}
+}
+
+func TestContainsValue(t *testing.T) {
+	var haystack map[string]int64
+	assert := assert.New(t)
+	wants := false
+	needle := "notexist"
+	got := containsValue(haystack, needle)
+	assert.Falsef(got, `containsValue haystack %v, needle %v, wants %v got %v`, haystack, needle, wants, got)
+
+	haystack = map[string]int64{"exist": 1}
+	got = containsValue(haystack, needle)
+	assert.Falsef(got, `containsValue haystack %v, needle %v, wants %v got %v`, haystack, needle, wants, got)
+
+	needle = "exist"
+	got = containsValue(haystack, needle)
+	wants = true
+	assert.Truef(got, `containsValue haystack %v, needle %v, wants %v got %v`, haystack, needle, wants, got)
+
 }

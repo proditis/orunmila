@@ -24,12 +24,14 @@ func check(e error) {
 	}
 }
 
-// Convert tag ids into a comma separated string to be used with our query
-func TagsToString() string {
+// Convert tags' ids from the db into a comma separated string
+func TagsToIdsInString() string {
 	var a []string
 	for _, id := range Tags {
+		log.Debugf("[TagsToIdsInString] id => %d\n", id)
 		a = append(a, fmt.Sprint(id))
 	}
+
 	return strings.Join(a, ",")
 }
 
@@ -144,7 +146,6 @@ func importFileWords(db *sql.DB, filename string) {
 
 	importTags(db)
 	log.Println(Tags)
-	log.Printf("%s", TagsToString())
 	file, err := os.Open(filename)
 	check(err)
 	defer file.Close()
@@ -209,6 +210,16 @@ func importFileWords(db *sql.DB, filename string) {
 	check(err)
 }
 
+// Search for the needle in the haystack
+func containsValue(haystack map[string]int64, needle string) bool {
+	for tagname := range haystack {
+		if tagname == needle {
+			return true
+		}
+	}
+	return false
+}
+
 //
 // Search for words matching tags
 //
@@ -217,11 +228,20 @@ func searchWordsByTagIds(db *sql.DB, tags string) {
 	populateTagIds(db)
 	removeEmptyTags()
 
-	if len(Tags) > 0 {
-		log.Infoln("Using tags:", Tags)
-		queryStr = fmt.Sprintf(queryStr+" left join wt as t2 on t2.word_id=t1.id WHERE t2.tag_id IN (%s) group by t1.id", TagsToString())
+
+	if len(tags) > 0 {
+		userTags := strings.Split(tags, ",")
+		log.Infoln("Using tags:", userTags)
+
+		for _, CurrentUserTag := range userTags {
+			if !containsValue(Tags, CurrentUserTag) {
+				log.Warnf("tag %q not found in the db\n", CurrentUserTag)
+			}
+		}
+
+		queryStr = fmt.Sprintf(queryStr+" left join wt as t2 on t2.word_id=t1.id WHERE t2.tag_id IN (%s) group by t1.id", TagsToIdsInString())
 	} else {
-		log.Infoln("No tags were given or tags no found")
+		log.Infoln("No tags were given")
 	}
 	rows, err := db.Query(queryStr)
 	check(err)
