@@ -18,7 +18,7 @@ releases:
 	GOARCH=arm64 GOOS=openbsd go build -o ${BINARY_NAME}-openbsd-arm64     ${SOURCE}
 
 test:
-	go test ${SOURCE}
+	go test ${SOURCE} -test.v
 
 test_coverage:
 	go test ${SOURCE} -coverprofile=coverage.out
