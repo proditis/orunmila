@@ -31,14 +31,13 @@ func searchSubcmd(args []string) error {
 	if err != nil {
 		return err
 	}
-
+	dsn := fmt.Sprintf("file:%s?mode=ro", *dbPtr)
 	log.Debugln("[searchSubcmd] using db:", *dbPtr)
 	log.Debugln("[searchSubcmd] using tags:", *tagsPtr)
-	log.Println("[searchSubcmd] performing a search")
+	log.Debugln("[searchSubcmd] using dsn:", dsn)
 
 	Tags = stringToArray(*tagsPtr)
 
-	dsn := fmt.Sprintf("file:%s?mode=ro", *dbPtr)
 	db, err := sql.Open("sqlite3", dsn)
 	check(err)
 	defer db.Close()
