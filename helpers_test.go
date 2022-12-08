@@ -34,25 +34,25 @@ func TestIsFileExists(t *testing.T) {
 	}
 }
 
-func TestTagsToString(t *testing.T) {
+func TestTagsToIdsInString(t *testing.T) {
 	Tags = make(map[string]int64)
 
 	wants := ""
-	if TagsToString() != wants {
-		t.Fatal(`Error: TagsToString not empty`)
+	if TagsToIdsInString() != wants {
+		t.Fatal(`Error: TagsToIdsInString not empty`)
 	}
 	Tags["test"] = 1
 	wants = "1"
-	got := TagsToString()
+	got := TagsToIdsInString()
 	if got != wants {
-		t.Fatalf(`Error: TagsToString got %s not %s`, got, wants)
+		t.Fatalf(`Error: TagsToIdsInString got %s not %s`, got, wants)
 	}
 	Tags["test2"] = -1
 	wants = "1,-1"
-	got = TagsToString()
+	got = TagsToIdsInString()
 	// hash maps have random order
 	if got != wants && got != "-1,1" {
-		t.Fatalf(`Error: TagsToString not %v got %v`, wants, got)
+		t.Fatalf(`Error: TagsToIdsInString not %v got %v`, wants, got)
 	}
 
 }
