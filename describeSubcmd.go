@@ -16,11 +16,12 @@ func describeSubcmd(args []string) {
 	descibeCmd := flag.NewFlagSet("describe", flag.ExitOnError)
 
 	descibeCmd.Usage = func() {
+		descibeCmd.SetOutput(flag.CommandLine.Output())
 		fmt.Fprint(descibeCmd.Output(), "Set the database description\n\n")
 		fmt.Fprintf(descibeCmd.Output(), "Usage of orunmila descibe:\n")
+		fmt.Fprintf(descibeCmd.Output(), "orunmila describe My Awesome Description\n\n")
+		fmt.Fprintln(descibeCmd.Output(), "  words strings\n\tdescription")
 		descibeCmd.PrintDefaults()
-		fmt.Fprintln(descibeCmd.Output(), "  words strings\n\tspace separated list of words to add")
-		fmt.Fprintln(descibeCmd.Output(), "\nexample: orunmila describe My Awesome Description")
 	}
 
 	descibeCmd.Parse(args)
