@@ -11,14 +11,15 @@ import (
 // parse args of the search subcommand and exec it
 func searchSubcmd(args []string) error {
 	searchCmd := flag.NewFlagSet("search", flag.ContinueOnError)
-	ShouldReturn := false
+
+	// Respect the global output for this FlagSet
+	searchCmd.SetOutput(flag.CommandLine.Output())
+
 	searchCmd.Usage = func() {
-		searchCmd.SetOutput(flag.CommandLine.Output())
 		fmt.Fprint(searchCmd.Output(), "Display words matching an optional list of tags\n\n")
 		fmt.Fprintf(searchCmd.Output(), "Usage of orunmila search:\n")
 		fmt.Fprintf(searchCmd.Output(), "orunmila [-db <db_path>] [-debug] search [-tags OPTIONAL_TAGS]\n\n")
 		searchCmd.PrintDefaults()
-		ShouldReturn = true
 	}
 
 	var (
@@ -27,10 +28,10 @@ func searchSubcmd(args []string) error {
 
 	err := searchCmd.Parse(args)
 
-	if ShouldReturn {
-		log.Println(err)
+	if err != nil {
 		return err
 	}
+
 	log.Debugln("[searchSubcmd] using db:", *dbPtr)
 	log.Debugln("[searchSubcmd] using tags:", *tagsPtr)
 	log.Println("[searchSubcmd] performing a search")
