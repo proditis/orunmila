@@ -1,5 +1,5 @@
 BINARY_NAME=orunmila
-SOURCE=orunmila.go
+SOURCE=./...
 
 .PHONY: all
 
@@ -18,10 +18,10 @@ releases:
 	GOARCH=arm64 GOOS=openbsd go build -o ${BINARY_NAME}-openbsd-arm64     ${SOURCE}
 
 test:
-	go test ./...
+	go test ${SOURCE} -test.v
 
 test_coverage:
-	go test ./... -coverprofile=coverage.out
+	go test ${SOURCE} -coverprofile=coverage.out
 
 dep:
 	-@CGO_ENABLED=1 GO111MODULE=on go mod download
