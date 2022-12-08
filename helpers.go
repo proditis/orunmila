@@ -55,7 +55,7 @@ func getWordId(db *sql.DB, word string) int64 {
 }
 
 // Creates the database schema
-func createDB(dbname string) {
+func createDB(dbname string) error {
 	db, err := sql.Open("sqlite3", dbname)
 	check(err)
 	defer db.Close()
@@ -70,8 +70,9 @@ func createDB(dbname string) {
 	_, err = db.Exec(sqlStmt)
 	if err != nil {
 		log.Printf("%q: %s\n", err, sqlStmt)
-		return
+		return err
 	}
+	return nil
 }
 
 // Split a string into a HASH map of the form Array[word]=-1
