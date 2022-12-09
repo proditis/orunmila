@@ -12,11 +12,13 @@ import (
 func vacuumSubcmd(args []string) {
 	vacuumCmd := flag.NewFlagSet("vacuum", flag.ExitOnError)
 
+	vacuumCmd.SetOutput(flag.CommandLine.Output())
+
 	vacuumCmd.Usage = func() {
 		fmt.Fprint(vacuumCmd.Output(), "Rebuild the database file, repacking it into a minimal amount of disk space\n\n")
-		fmt.Fprintf(vacuumCmd.Output(), "Usage of orunmila vacuum:\n")
+		fmt.Fprintln(vacuumCmd.Output(), "Usage of orunmila vacuum:")
+		fmt.Fprintln(vacuumCmd.Output(), "orunmila [-db <db_path>] [-debug] vacuum")
 		vacuumCmd.PrintDefaults()
-		fmt.Fprintln(vacuumCmd.Output(), "\texample: orunmila [-db <db_path>] vacuum")
 	}
 
 	// nothing to parse, just there to trigger the usage menu

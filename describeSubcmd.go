@@ -13,17 +13,19 @@ import (
 // parse args of the describe subcommand and exec it
 func describeSubcmd(args []string) {
 
-	descibeCmd := flag.NewFlagSet("describe", flag.ExitOnError)
+	describeCmd := flag.NewFlagSet("describe", flag.ExitOnError)
 
-	descibeCmd.Usage = func() {
-		fmt.Fprint(descibeCmd.Output(), "Set the database description\n\n")
-		fmt.Fprintf(descibeCmd.Output(), "Usage of orunmila descibe:\n")
-		descibeCmd.PrintDefaults()
-		fmt.Fprintln(descibeCmd.Output(), "  words strings\n\tspace separated list of words to add")
-		fmt.Fprintln(descibeCmd.Output(), "\nexample: orunmila describe My Awesome Description")
+	describeCmd.SetOutput(flag.CommandLine.Output())
+
+	describeCmd.Usage = func() {
+		fmt.Fprint(describeCmd.Output(), "Set the database description\n\n")
+		fmt.Fprintf(describeCmd.Output(), "Usage of orunmila descibe:\n")
+		fmt.Fprintf(describeCmd.Output(), "orunmila describe My Awesome Description\n\n")
+		fmt.Fprintln(describeCmd.Output(), "  words strings\n\tdescription")
+		describeCmd.PrintDefaults()
 	}
 
-	descibeCmd.Parse(args)
+	describeCmd.Parse(args)
 
 	if len(args) < 1 {
 		log.Errorln("please provide a description")
