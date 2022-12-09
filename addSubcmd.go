@@ -13,7 +13,7 @@ import (
 // parse args of the add subcommand and exec it
 func addSubcmd(args []string) {
 	addCmd := flag.NewFlagSet("add", flag.ExitOnError)
-
+	addCmd.SetOutput(flag.CommandLine.Output())
 	addCmd.Usage = func() {
 		addCmd.SetOutput(flag.CommandLine.Output())
 		fmt.Fprint(addCmd.Output(), "Add words to the database from the command line with optional tags\n\n")
