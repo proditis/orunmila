@@ -31,7 +31,6 @@ func main() {
 	}
 	exitCode := 0
 	var err error
-	err = nil
 
 	dbPtr = flag.String("db", getDefaultDBPath(), "the database filename (default: orunmila.db")
 	debugPtr = flag.Bool("debug", false, "enable debug")
