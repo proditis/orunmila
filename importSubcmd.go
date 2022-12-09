@@ -12,6 +12,7 @@ import (
 // parse args of the import subcommand and exec it
 func importSubcmd(args []string) {
 	importCmd := flag.NewFlagSet("import", flag.ExitOnError)
+	importCmd.SetOutput(flag.CommandLine.Output())
 
 	importCmd.Usage = func() {
 		fmt.Fprint(importCmd.Output(), "Import a word file into the database with optional tags\n\n")
