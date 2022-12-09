@@ -12,6 +12,8 @@ import (
 func infoSubcmd(args []string) {
 	infoCmd := flag.NewFlagSet("info", flag.ExitOnError)
 
+	infoCmd.SetOutput(flag.CommandLine.Output())
+
 	infoCmd.Usage = func() {
 		fmt.Fprint(infoCmd.Output(), "Display database system configuration information\n\n")
 		fmt.Fprintf(infoCmd.Output(), "Usage of orunmila info:\n")
