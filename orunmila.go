@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
 
 	log "github.com/sirupsen/logrus"
 
@@ -30,6 +29,8 @@ func main() {
 		fmt.Fprintln(flag.CommandLine.Output(), "  describe Set the database description")
 		fmt.Fprintln(flag.CommandLine.Output(), "  vacuum   Rebuild the database file, repacking it into a minimal amount of disk space")
 	}
+	exitCode := 0
+	var err error
 
 	dbPtr = flag.String("db", getDefaultDBPath(), "the database filename (default: orunmila.db")
 	debugPtr = flag.Bool("debug", false, "enable debug")
@@ -69,15 +70,16 @@ func main() {
 	case "import", "imp", "i":
 		importSubcmd(args)
 	case "search", "sea", "s":
-		searchSubcmd(args)
+		err = searchSubcmd(args)
 	case "vacuum", "vac", "v":
 		vacuumSubcmd(args)
 	default:
-		log.Errorf("Unrecognized subcommand: %q", subcommand)
+		fmt.Fprintln(flag.CommandLine.Output(), "Unrecognized subcommand:", subcommand)
 		flag.Usage()
-		os.Exit(1)
-		// TODO print help menu
+		exitCode = 1
 	}
-
-	os.Exit(0)
+	if err != nil {
+		exitCode = 2
+	}
+	log.Exit(exitCode)
 }
