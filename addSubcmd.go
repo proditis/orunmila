@@ -13,7 +13,9 @@ import (
 // parse args of the add subcommand and exec it
 func addSubcmd(args []string) {
 	addCmd := flag.NewFlagSet("add", flag.ExitOnError)
+
 	addCmd.SetOutput(flag.CommandLine.Output())
+
 	addCmd.Usage = func() {
 		fmt.Fprint(addCmd.Output(), "Add words to the database from the command line with optional tags\n\n")
 		fmt.Fprintf(addCmd.Output(), "Usage of orunmila add:\n")
