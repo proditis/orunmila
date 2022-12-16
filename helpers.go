@@ -223,11 +223,10 @@ func containsValue(haystack map[string]int64, needle string) bool {
 //
 // Search for words matching tags
 //
-func searchWordsByTagIds(db *sql.DB, tags string) {
-	queryStr := "select t1.name from words as t1"
+func searchWordsByTagIds(db *sql.DB, tags string, showTags bool) {
+	queryStr := `select t1.name,(select group_concat(name,',') from tags where id in (select tag_id from wt where word_id=t1.id)) as tagged from words as t1`
 	populateTagIds(db)
 	removeEmptyTags()
-
 
 	if len(tags) > 0 {
 		userTags := strings.Split(tags, ",")
@@ -239,7 +238,7 @@ func searchWordsByTagIds(db *sql.DB, tags string) {
 			}
 		}
 
-		queryStr = fmt.Sprintf(queryStr+" left join wt as t2 on t2.word_id=t1.id WHERE t2.tag_id IN (%s) group by t1.id", TagsToIdsInString())
+		queryStr = fmt.Sprintf(queryStr+` left join wt as t2 on t2.word_id=t1.id WHERE t2.tag_id IN (%s) group by t1.id`, TagsToIdsInString())
 	} else {
 		log.Infoln("No tags were given")
 	}
@@ -248,11 +247,17 @@ func searchWordsByTagIds(db *sql.DB, tags string) {
 	defer rows.Close()
 	for rows.Next() {
 		var name string
-		err = rows.Scan(&name)
+		var tags string
+		err = rows.Scan(&name, &tags)
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println(name)
+		if showTags {
+			fmt.Println(name, tags)
+		} else {
+			fmt.Println(name)
+		}
+
 	}
 	err = rows.Err()
 	check(err)

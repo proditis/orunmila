@@ -2,15 +2,24 @@ package main
 
 import (
 	"database/sql"
+	"flag"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
 func init() {
+	dbPtr = &_testDB
+
+	// set default output for flags to &buf
+	flag.CommandLine.SetOutput(&buf)
+
+	// set Logrus output to &buf
+	log.SetOutput(&buf)
 }
 func TestGetDefaultDBPath(t *testing.T) {
 	path, _ := os.Getwd()
@@ -190,7 +199,13 @@ func TestSearchWordsByTagIds(t *testing.T) {
 	// populate words
 	// populate tags
 	// populate word_tags
+	var dbname = "random.db"
+	createDbFileifNotExists(dbname)
+	defer os.Remove(dbname)
+	db, err := sql.Open("sqlite3", dbname)
+	assert.NoError(t, err)
 
+	searchWordsByTagIds(db, "a", true)
 	t.Log(`SOFTFAIL: not implemented`)
 }
 

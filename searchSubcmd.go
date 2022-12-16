@@ -18,12 +18,13 @@ func searchSubcmd(args []string) error {
 	searchCmd.Usage = func() {
 		fmt.Fprint(searchCmd.Output(), "Display words matching an optional list of tags\n\n")
 		fmt.Fprintf(searchCmd.Output(), "Usage of orunmila search:\n")
-		fmt.Fprintf(searchCmd.Output(), "orunmila [-db <db_path>] [-debug] search [-tags OPTIONAL_TAGS]\n\n")
+		fmt.Fprintf(searchCmd.Output(), "orunmila [-db <db_path>] [-debug] search [-st] [-tags OPTIONAL_TAGS]\n\n")
 		searchCmd.PrintDefaults()
 	}
 
 	var (
-		tagsPtr = searchCmd.String("tags", "", "a comma separated list of the tags to use")
+		tagsPtr     = searchCmd.String("tags", "", "a comma separated list of the tags to use")
+		showTagsPtr = searchCmd.Bool("st", false, "show result tags")
 	)
 
 	err := searchCmd.Parse(args)
@@ -35,6 +36,7 @@ func searchSubcmd(args []string) error {
 	log.Debugln("[searchSubcmd] using db:", *dbPtr)
 	log.Debugln("[searchSubcmd] using tags:", *tagsPtr)
 	log.Debugln("[searchSubcmd] using dsn:", dsn)
+	log.Debugln("[searchSubcmd] show tags:", *showTagsPtr)
 
 	Tags = stringToArray(*tagsPtr)
 
@@ -42,6 +44,6 @@ func searchSubcmd(args []string) error {
 	check(err)
 	defer db.Close()
 
-	searchWordsByTagIds(db, *tagsPtr)
+	searchWordsByTagIds(db, *tagsPtr, *showTagsPtr)
 	return nil
 }
