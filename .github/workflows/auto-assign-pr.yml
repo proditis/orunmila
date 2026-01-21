@@ -4,6 +4,9 @@ on:
   pull_request_target:
     types: [opened]
 
+permissions:
+  issues: write
+
 jobs:
   assign:
     runs-on: ubuntu-latest
