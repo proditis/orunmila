@@ -3,7 +3,7 @@ module github.com/proditis/orunmila
 go 1.21
 
 require (
-	github.com/mattn/go-sqlite3 v1.14.40
+	github.com/mattn/go-sqlite3 v1.14.47
 	github.com/sirupsen/logrus v1.9.4
 	github.com/stretchr/testify v1.11.1
 )
