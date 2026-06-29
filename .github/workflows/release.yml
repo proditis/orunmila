@@ -5,7 +5,7 @@ on:
     types: [created,published]
 
 env:
-  GO_VERSION: 1.18
+  GO_VERSION: 1.22
 #  goos: [ freebsd, openbsd, windows, linux, darwin ]
 
 jobs:
