@@ -21,7 +21,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
-        go-version: 1.18
+        go-version: ${{ env.GO_VERSION }}
 
     - name: Get deps
       run: go get -v -t -d ./...
